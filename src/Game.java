@@ -40,6 +40,10 @@ public class Game {
         return this.name;
     }
 
+    public Player getActivePlayer() {
+        return this.activePlayer;
+    }
+
     public void addPlayer(Player player) {
         players.add(player);
         silent.send("Spieler " + player.getName() + " ist dem Spiel beigetreten.", getId());
@@ -53,10 +57,11 @@ public class Game {
     }
 
     public void play() {
-        silent.send("Play Method called on Game! Following Players registred:", getId());
+        StringBuilder string = new StringBuilder();
         for (Player player : players) {
-            silent.send(player.getName(), getId());
+            string.append(player.getName()).append("\r\n");
         }
+        silent.send("Das Spiel kann beginnen. Folgende Spieler spielen mit:\r\n\r\n" + string.toString() + "\r\nViel Spaß!", getId());
         this.movesLeft = players.size();
         Collections.shuffle(players);
         this.activePlayer = players.get(0);
@@ -145,8 +150,9 @@ public class Game {
         for (Player player : players) {
             Role role = roles.remove(0);
             player.setRole(role);
-            player.say("Du bist " + role);
-            player.say("Du hast folgende Karten bekommen " + player.getCards());
+            player.say("Du bist " + role.toString() + "!");
+            
+            player.say("Du hast folgende Karten bekommen: " + player.getCards().toString());
         }
 
         while (!isFinished() && round != 1) {
@@ -179,7 +185,7 @@ public class Game {
                 exposedGold++;
                 break;
             case LEER:
-                silent.send("Eine leer Karte wurde aufgedeckt!", id);
+                silent.send("Eine leere Karte wurde aufgedeckt!", id);
                 exposedLeer++;
                 break;
             case FEUERFALLE:
