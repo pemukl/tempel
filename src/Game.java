@@ -170,16 +170,15 @@ public class Game {
         if (!isFinished() && round != 1) {
             if (movesLeft == 0) {
                 nextRound();
-            } else {
-                List<Player> selection = new ArrayList<>();
-                for (Player player : players) {
-                    if (!player.getCards().isEmpty() && player != activePlayer)
-                        selection.add(player);
-                }
-                System.out.println("letting Choose " + activePlayer.getName() + " from " + Player.playersToStrings(selection));
-
-                activePlayer.letChoose(selection);
             }
+            List<Player> selection = new ArrayList<>();
+            for (Player player : players) {
+                if (!player.getCards().isEmpty() && player != activePlayer)
+                    selection.add(player);
+            }
+            System.out.println("letting Choose " + activePlayer.getName() + " from " + Player.playersToStrings(selection));
+
+            activePlayer.letChoose(selection);
         } else {
             finished();
         }
@@ -268,10 +267,7 @@ public class Game {
         for (int x = 0; x < feuerfallenLeft; x++) {
             cards.add(Card.FEUERFALLE);
         }
-        System.out.println(cards);
         Collections.shuffle(cards);
-        System.out.println(cards);
-        System.out.println(round);
         for (Player player : players) {
             List<Card> cardsForPlayer = new ArrayList<>();
             for (int y = 0; y < round; y++) {
@@ -286,7 +282,6 @@ public class Game {
     }
 
     private int[] getNumOfCardsFromPlayer(Player player) {
-        System.out.println("Number");
         int[] cards = new int[3];
         List<Card> playerCards = player.getCards();
         cards[0] = (int) playerCards.stream()
@@ -301,7 +296,7 @@ public class Game {
         return cards;
     }
 
-    private void sendMarkdown(String str){
+    private void sendMarkdown(String str) {
         SendMessage sendMessagerequest = new SendMessage();
 
         sendMessagerequest.setChatId(this.getId());
