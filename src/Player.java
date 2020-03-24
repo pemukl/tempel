@@ -85,6 +85,7 @@ public class Player {
     }
 
     public Player letChoose(List<Player> selection) {
+        System.out.println("Player: " + selection);
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(getID());
         sendMessage.setText("Bei wem willst Du eine Türe öffnen?");
@@ -104,19 +105,14 @@ public class Player {
         } else {
 
         }
-
         InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
-
         List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
-
         for (Player player : players) {
             List<InlineKeyboardButton> rowInline = new ArrayList<>();
             rowInline.add(new InlineKeyboardButton().setText(player.getName()).setCallbackData("player:" + player.getID()));
             rowsInline.add(rowInline);
         }
-
         markupInline.setKeyboard(rowsInline);
-
         return markupInline;
     }
 

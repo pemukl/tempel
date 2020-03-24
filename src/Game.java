@@ -138,7 +138,14 @@ public class Game {
         for (Player player : players) {
             player.setRole(roles.remove(0));
         }
-        while (isFinished() && round != 5) {
+        distributeCards();
+        List<Player> selection = new ArrayList<>();
+        for (Player player : players) {
+            if (!player.getCards().isEmpty() && player != activePlayer)
+                selection.add(player);
+        }
+        activePlayer.letChoose(selection);
+        while (isFinished() && round != 1) {
             if (movesLeft == 0) {
                 nextRound();
             } else {
@@ -209,7 +216,8 @@ public class Game {
 
     public void nextRound() {
         distributeCards();
-        this.round++;
+        this.round--;
+        this.movesLeft = round;
         for (Player player : players) {
             // TODO Karten den Spielern mitteilen (über ID) (x Leer, x Gold, x Feuerfallen)
             int[] cards = getNumOfCardsFromPlayer(player);
@@ -246,7 +254,7 @@ public class Game {
         Collections.shuffle(cards);
         for (Player player : players) {
             List<Card> cardsForPlayer = new ArrayList<>();
-            for (int y = 0; y < 6 - round; y++) {
+            for (int y = 0; y < round; y++) {
                 cardsForPlayer.add(cards.remove(0));
             }
             player.setCards(cardsForPlayer);
