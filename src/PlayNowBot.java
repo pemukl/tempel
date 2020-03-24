@@ -51,25 +51,27 @@ public class PlayNowBot extends AbilityBot {
                 .info("says hello world!")
                 .locality(ALL)
                 .privacy(PUBLIC)
-                .action(ctx -> {silent.send("Hello world!", ctx.chatId());
-                    System.out.println("I greeted "+ctx.chatId());})
+                .action(ctx -> {
+                    silent.send("Hello world!", ctx.chatId());
+                    System.out.println("I greeted " + ctx.chatId());
+                })
                 .build();
     }
 
     public Reply replyToQuery() {
         // getChatId is a public utility function in rg.telegram.abilitybots.api.util.AbilityUtils
         Consumer<Update> action = upd -> {
-                Player player = Player.getPlayer(upd.getCallbackQuery().getFrom().getId());
-                long chatId = upd.getCallbackQuery().getMessage().getChatId();
-                Game game = getGame(chatId);
-                silent.send("Knopf gedrückt von: " + player.getName(), getChatId(upd));
-                long chosenId = Long.parseLong(upd.getCallbackQuery().getData());
-                Player chosenOne = Player.getPlayer(chosenId);
-                if(game.getActivePlayer().getId() == player.getId()){
-                    game.silent.send(player.getName() + " chose " + chosenOne.getName(),game.getId());
-                }else{
-                    player.say("Du kannst " + chosenOne.getName() + " nicht auswählen weil Du nicht am Zug bist.");
-                }
+            Player player = Player.getPlayer(upd.getCallbackQuery().getFrom().getId());
+            long chatId = upd.getCallbackQuery().getMessage().getChatId();
+            Game game = getGame(chatId);
+            silent.send("Knopf gedrückt von: " + player.getName(), getChatId(upd));
+            long chosenId = Long.parseLong(upd.getCallbackQuery().getData());
+            Player chosenOne = Player.getPlayer(chosenId);
+            if (game.getActivePlayer().getId() == player.getId()) {
+                game.silent.send(player.getName() + " chose " + chosenOne.getName(), game.getId());
+            } else {
+                player.say("Du kannst " + chosenOne.getName() + " nicht auswählen weil Du nicht am Zug bist.");
+            }
         };
 
         return Reply.of(action, Flag.CALLBACK_QUERY);
@@ -149,7 +151,7 @@ public class PlayNowBot extends AbilityBot {
                             SendMessage sendMessagerequest = new SendMessage();
                             sendMessagerequest.setChatId(ctx.chatId().toString());
                             sendMessagerequest.setText(frage);
-                            Game game = new Game(ctx.chatId());
+                            Game game = new Game(ctx.chatId(), this);
                             game.setSilent(silent);
                             games.add(game);
                             silent.forceReply(frage, ctx.chatId());
@@ -177,11 +179,11 @@ public class PlayNowBot extends AbilityBot {
                 .locality(GROUP)
                 .privacy(ADMIN)
                 .action(ctx -> {
-                            if(getGame(ctx.chatId())==null){
-                                Game game = new Game(ctx.chatId());
+                            if (getGame(ctx.chatId()) == null) {
+                                Game game = new Game(ctx.chatId(), this);
                                 game.setSilent(silent);
                                 games.add(game);
-                                if (ctx.arguments().length==0){
+                                if (ctx.arguments().length == 0) {
                                     game.setName("TempelDesSchreckens");
                                 } else {
                                     game.setName(ctx.firstArg());
@@ -234,8 +236,8 @@ public class PlayNowBot extends AbilityBot {
         return upd -> upd.getMessage().getReplyToMessage().getFrom().getUserName().equalsIgnoreCase(getBotUsername());
     }
 
-    public void removeGame(Game toRemove){
+    public void removeGame(Game toRemove) {
         toRemove.destroyPlayers();
-        this.games.remove(toRemove);
+        games.remove(toRemove);
     }
 }

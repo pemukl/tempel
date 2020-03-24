@@ -12,12 +12,14 @@ public class Game {
     private final long id;
     private String name;
     public SilentSender silent;
+    private PlayNowBot playNowBot;
 
     private int round, movesLeft, exposedGold, exposedLeer, exposedFeuerfallen;
     private Player activePlayer;
     private List<Player> players;
 
-    public Game(long chatId) {
+    public Game(long chatId, PlayNowBot playNowBot) {
+        this.playNowBot = playNowBot;
         this.id = chatId;
         this.players = new ArrayList<>();
         this.exposedGold = 0;
@@ -276,6 +278,7 @@ public class Game {
             }
         }
         running = false;
+        playNowBot.removeGame(this);
     }
 
     private void appendWinner(List<String> winner, List<String> loser, StringBuilder string) {
