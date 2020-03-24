@@ -119,22 +119,22 @@ public class Game {
     }
 
     public void nextMove(Player nextPlayer) {
-        silent.send("__" + activePlayer.getName() + "__ geht zu __" + nextPlayer.getName() + "__.", id);
+        silent.send("_" + activePlayer.getName() + "_ geht zu _" + nextPlayer.getName() + "_.", id);
         activePlayer.setHasKey(false);
         activePlayer = nextPlayer;
         activePlayer.setHasKey(true);
         Card card = activePlayer.getCards().remove(0);
         switch (card) {
             case GOLD:
-                silent.send("Ein **Gold** wurde aufgedeckt!", id);
+                silent.send("Ein *Gold* wurde aufgedeckt!", id);
                 exposedGold++;
                 break;
             case LEER:
-                silent.send("Eine **leere Karte** wurde aufgedeckt!", id);
+                silent.send("Eine *leere Karte* wurde aufgedeckt!", id);
                 exposedLeer++;
                 break;
             case FEUERFALLE:
-                silent.send("Eine **Feuerfalle** wurde aufgedeckt!", id);
+                silent.send("Eine *Feuerfalle* wurde aufgedeckt!", id);
                 exposedFeuerfallen++;
         }
         movesLeft--;
