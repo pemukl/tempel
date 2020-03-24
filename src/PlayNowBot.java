@@ -170,7 +170,6 @@ public class PlayNowBot extends AbilityBot {
                         isReplyToBot(),
                         isReplyToMessage(frage))
                 .build();
-
     }
 
     public Ability invite() {
