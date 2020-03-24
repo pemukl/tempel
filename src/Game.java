@@ -7,6 +7,8 @@ public class Game {
     private int numLeer;
     private int numFeuerfallen;
 
+    private boolean running;
+
     private final long id;
     private String name;
     public SilentSender silent;
@@ -22,6 +24,7 @@ public class Game {
         this.exposedLeer = 0;
         this.exposedFeuerfallen = 0;
         this.round = 5;
+        this.running = false;
     }
 
     public void setSilent(SilentSender silent) {
@@ -38,6 +41,10 @@ public class Game {
 
     public String getName() {
         return this.name;
+    }
+
+    public boolean isRunning() {
+        return running;
     }
 
     public Player getActivePlayer() {
@@ -57,15 +64,16 @@ public class Game {
     }
 
     public void play() {
-        if (players.size() >= 3) {
+        if (players.size() < 3) {
             silent.send("Es sind leider zu wenig Spieler drin. Bitte fügt noch weitere Spieler hinzu.", id);
             return;
         }
         // TODO was passiert wenn
-        if(players.size() <= 10){
+        if(players.size() > 10){
             silent.send("Es sind leider zu viele Spieler drin. Bitte erstellt mehrere Spiele.", id);
             return;
         }
+        running = true;
         StringBuilder string = new StringBuilder();
         for (Player player : players) {
             string.append(player.getName()).append("\r\n");
