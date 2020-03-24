@@ -20,6 +20,7 @@ public class Player {
     public Player(long id, String name, Game game) {
         this.currentGame = game;
         this.id = id;
+        this.name = name;
         this.cards = new ArrayList<>();
         this.hasKey = false;
     }
@@ -59,7 +60,7 @@ public class Player {
 
     public String getName() {
         if (name == null) {
-            return "name not initialized";
+            return "no username";
         }
         return this.name;
     }
