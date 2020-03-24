@@ -69,7 +69,7 @@ public class Player {
     }
 
     public String getName() {
-        if(name==null){
+        if (name == null) {
             return "name not initialized";
         }
         return this.name;
@@ -89,24 +89,24 @@ public class Player {
         return null;
     }
 
-    static public List<String> playersToStrings(List<Player> players){
+    static public List<String> playersToStrings(List<Player> players) {
         List<String> array = new ArrayList<>();
-        for (Player player:players
-             ) {
+        for (Player player : players
+        ) {
             array.add(player.getName());
         }
         return array;
     }
 
-    public void say(String message){
-        silent.send(message,id);
+    public void say(String message) {
+        silent.send(message, id);
     }
 
     public Player letChoose(List<Player> selection) {
         System.out.println("Player: " + selection);
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(currentGame.getId());
-        sendMessage.setText("Bei wem willst Du eine Türe öffnen?");
+        sendMessage.setText("Jetzt ist " + name + " dran. Bei wem willst du eine Türe öffnen?");
         sendMessage.setReplyMarkup(getKeyboard(selection));
         currentGame.silent.execute(sendMessage);
         return selection.get(0);

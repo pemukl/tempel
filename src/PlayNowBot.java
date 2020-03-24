@@ -68,13 +68,13 @@ public class PlayNowBot extends AbilityBot {
             System.out.println("Pushed by:" + pusher);
             long chatId = query.getMessage().getChatId();
             Game game = getGame(chatId);
-            silent.send("Knopf ("+query.getData()+") gedrückt von: " + player.getName(), getChatId(upd));
+            silent.send("Knopf (" + query.getData() + ") gedrückt von: " + player.getName(), getChatId(upd));
             long chosenId = Long.parseLong(query.getData().split("player:")[1]);
             System.out.println("Callback Query mit ID: " + chosenId);
             Player chosenOne = Player.getPlayer(chosenId);
-            if(game.getActivePlayer().getId() == player.getId()){
-                game.silent.send(player.getName() + " chose " + chosenOne.getName(),game.getId());
-            }else{
+            if (game.getActivePlayer().getId() == player.getId()) {
+                game.silent.send(player.getName() + " chose " + chosenOne.getName(), game.getId());
+            } else {
                 player.say("Du kannst " + chosenOne.getName() + " nicht auswählen weil Du nicht am Zug bist.");
             }
         };
@@ -190,11 +190,11 @@ public class PlayNowBot extends AbilityBot {
                                 games.add(game);
                                 if (ctx.arguments().length == 0) {
                                     game.setName("TempelDesSchreckens");
-                                } else if (ctx.arguments().length==1){
+                                } else if (ctx.arguments().length == 1) {
                                     game.setName(ctx.firstArg());
                                 } else {
                                     game.setName(ctx.firstArg());
-                                    Player dummy = new Player(12345,game);
+                                    Player dummy = new Player(12345, game);
                                     dummy.setName(ctx.secondArg());
                                 }
                             }

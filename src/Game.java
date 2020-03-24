@@ -71,7 +71,7 @@ public class Game {
             return;
         }
         // TODO was passiert wenn
-        if(players.size() > 10){
+        if (players.size() > 10) {
             silent.send("Es sind leider zu viele Spieler drin. Bitte erstellt mehrere Spiele.", id);
             return;
         }
@@ -86,70 +86,12 @@ public class Game {
         silent.send("Das Spiel kann beginnen. Folgende Spieler spielen mit:\r\n\r\n" + string.toString() + "\r\n" + activePlayer.getName() + " darf als erstes ziehen.", id);
         int numWaechterinnen;
         int numAbenteurer;
-        switch (players.size()) {
-            case 3:
-                numAbenteurer = 2;
-                numWaechterinnen = 2;
-                this.numGold = 5;
-                this.numLeer = 8;
-                this.numFeuerfallen = 2;
-                break;
-            case 4:
-                numAbenteurer = 3;
-                numWaechterinnen = 2;
-                this.numGold = 6;
-                this.numLeer = 12;
-                this.numFeuerfallen = 2;
-                break;
-            case 5:
-                numAbenteurer = 3;
-                numWaechterinnen = 2;
-                this.numGold = 7;
-                this.numLeer = 16;
-                this.numFeuerfallen = 2;
-                break;
-            case 6:
-                numAbenteurer = 4;
-                numWaechterinnen = 2;
-                this.numGold = 8;
-                this.numLeer = 20;
-                this.numFeuerfallen = 2;
-                break;
-            case 7:
-                numAbenteurer = 5;
-                numWaechterinnen = 3;
-                this.numGold = 7;
-                this.numLeer = 26;
-                this.numFeuerfallen = 2;
-                break;
-            case 8:
-                numAbenteurer = 6;
-                numWaechterinnen = 3;
-                this.numGold = 8;
-                this.numLeer = 30;
-                this.numFeuerfallen = 2;
-                break;
-            case 9:
-                numAbenteurer = 6;
-                numWaechterinnen = 3;
-                this.numGold = 9;
-                this.numLeer = 34;
-                this.numFeuerfallen = 2;
-                break;
-            case 10:
-                numAbenteurer = 7;
-                numWaechterinnen = 4;
-                this.numGold = 10;
-                this.numLeer = 37;
-                this.numFeuerfallen = 3;
-                break;
-            default:
-                numAbenteurer = 0;
-                numWaechterinnen = 0;
-                this.numGold = 0;
-                this.numLeer = 0;
-                this.numFeuerfallen = 0;
-        }
+        Distribution distribution = Distribution.getDistribution(players.size());
+        numAbenteurer = distribution.getAbenteurer();
+        numWaechterinnen = distribution.getWaechterinnen();
+        this.numGold = distribution.getGold();
+        this.numLeer = distribution.getLeer();
+        this.numFeuerfallen = distribution.getFeuerfallen();
         List<Role> roles = new ArrayList<>();
         for (int x = 0; x < numAbenteurer; x++) {
             roles.add(Role.ABENTEURER);
@@ -158,12 +100,11 @@ public class Game {
             roles.add(Role.WAECHTERIN);
         }
         Collections.shuffle(roles);
-        distributeCards();
         for (Player player : players) {
-            Role role = roles.remove(0);
-            player.setRole(role);
-            player.say("Du bist " + role.toString() + "!");
+            player.setRole(roles.remove(0));
+            player.say("Du bist " + player.getRole().toString() + "!");
         }
+        distributeCards();
         while (!isFinished() && round != 1) {
             if (movesLeft == 0) {
                 nextRound();
@@ -181,13 +122,11 @@ public class Game {
     }
 
     private void nextMove(Player nextPlayer) {
-        // TODO Mitteilen wer zu wem gegangen ist.
         silent.send(activePlayer.getName() + " geht zu " + nextPlayer.getName() + ".", id);
         activePlayer.setHasKey(false);
         activePlayer = nextPlayer;
         activePlayer.setHasKey(true);
         Card card = activePlayer.getCards().remove(0);
-        // TODO Mitteilen welche Karte geöffnet wurde.
         switch (card) {
             case GOLD:
                 silent.send("Ein Gold wurde aufgedeckt!", id);
@@ -205,8 +144,7 @@ public class Game {
         int gold = (int) activePlayer.getCards().stream().filter(card1 -> card1 == Card.GOLD).count();
         int feuer = (int) activePlayer.getCards().stream().filter(card1 -> card1 == Card.FEUERFALLE).count();
         int leer = (int) activePlayer.getCards().stream().filter(card1 -> card1 == Card.LEER).count();
-        activePlayer.say("Du hast nun nur noch folgende Karten:\r\n\r\n" + "Gold: " + gold + "Feuerfallen: " + feuer + "Leer: " + leer);
-        // TODO Mitteilen wie viele Karten alle Spieler noch haben.
+        activePlayer.say("Du hast nun nur noch folgende Karten:\r\n\r\n" + "Gold: " + gold + "\r\nFeuerfallen: " + feuer + "\r\nLeer: " + leer);
         StringBuilder string = new StringBuilder();
         for (Player player : players) {
             if (!player.getCards().isEmpty()) {
@@ -237,7 +175,6 @@ public class Game {
         List<String> winner = new ArrayList<>();
         List<String> loser = new ArrayList<>();
         if (exposedGold == numGold) {
-            // TODO Abenteurer gewinnen
             for (Player player : players) {
                 if (player.getRole() == Role.ABENTEURER)
                     winner.add(player.getName());
@@ -255,7 +192,6 @@ public class Game {
             }
             string.append("\r\nVielleicht beim nächsten Mal. :(");
             silent.send("Die Abenteurer haben gewonnen!\r\n" + string.toString(), id);
-            // TODO Mitteilen wer in den Teams war und das alle x Gold aufgedeckt wurden
         } else {
             for (Player player : players) {
                 if (player.getRole() == Role.WAECHTERIN)
@@ -264,17 +200,13 @@ public class Game {
                     loser.add(player.getName());
             }
             if (numFeuerfallen == exposedFeuerfallen) {
-                // TODO Wächterinnen gewinnen
                 StringBuilder string = new StringBuilder();
                 string.append("Alle Feuerfallen wurden aufgedeckt!\r\n\r\nDie Gewinner sind:\r\n");
                 appendWinner(winner, loser, string);
-                // TODO Mitteilen wer in den Teams war und das alle x Feuerfallen aufgedeckt wurden oder keine Züge mehr
             } else {
-                // TODO Wächterinnen gewinnen
                 StringBuilder string = new StringBuilder();
                 string.append("Es wurde nicht das ganze Gold aufgedeckt!\r\n\r\nDie Gewinner sind:\r\n");
                 appendWinner(winner, loser, string);
-                // TODO Mitteilen wer in den Teams war und das alle x Feuerfallen aufgedeckt wurden oder keine Züge mehr
             }
         }
         running = false;
@@ -293,18 +225,14 @@ public class Game {
         silent.send("Die Wächterinnen haben gewonnen!\r\n" + string.toString(), id);
     }
 
-    public void nextRound() {
+    private void nextRound() {
         silent.send("Eine neue Runde beginnt. Jeder Spieler bekommt neue Karten.", id);
         distributeCards();
         this.round--;
         this.movesLeft = round;
         for (Player player : players) {
-            // TODO Karten den Spielern mitteilen (über ID) (x Leer, x Gold, x Feuerfallen)
-            int[] cards = getNumOfCardsFromPlayer(player);
-            String string = "Leer: " + cards[0] + "\r\n" + "Gold: " + cards[1] + "\r\n" + "Feuerfallen: " + cards[2];
             if (player.isHasKey())
-                string += "\r\n\r\nDu hast gerade den Schlüssel und darfst die nächste Runde starten.";
-            player.say("Das sind deine Karten für diese Runde:\r\n\r\n" + string);
+                player.say("Du hast gerade den Schlüssel und darfst die nächste Runde starten.");
         }
     }
 
@@ -329,11 +257,10 @@ public class Game {
                 cardsForPlayer.add(cards.remove(0));
             }
             player.setCards(cardsForPlayer);
-            int gold = (int) cardsForPlayer.stream().filter(card -> card == Card.GOLD).count();
-            int feuer = (int) cardsForPlayer.stream().filter(card -> card == Card.FEUERFALLE).count();
-            int leer = (int) cardsForPlayer.stream().filter(card -> card == Card.LEER).count();
-            player.say("----------------- Neue Runde -----------------");
-            player.say("Du hast folgende Karten bekommen:\r\n\r\n" + "Gold: " + gold + "Feuerfallen: " + feuer + "Leer: " + leer);
+            int[] cards1 = getNumOfCardsFromPlayer(player);
+            if (round != 5)
+                player.say("----------------- Neue Runde -----------------");
+            player.say("Das sind deine Karten für diese Runde:\r\n\r\n" + "Gold: " + cards1[1] + "\r\nFeuerfallen: " + cards1[2] + "\r\nLeer: " + cards1[0]);
         }
     }
 
@@ -352,7 +279,9 @@ public class Game {
         return cards;
     }
 
-    public void destroyPlayers(){
-        players.forEach(player -> {player.destroy();});
+    public void destroyPlayers() {
+        players.forEach(player -> {
+            player.destroy();
+        });
     }
 }
