@@ -114,7 +114,7 @@ public class Game {
         activePlayer.letChoose(selection);
     }
 
-    private void nextMove(Player nextPlayer) {
+    public void nextMove(Player nextPlayer) {
         silent.send("__" + activePlayer.getName() + "__ geht zu __" + nextPlayer.getName() + "__.", id);
         activePlayer.setHasKey(false);
         activePlayer = nextPlayer;
