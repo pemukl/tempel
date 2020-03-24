@@ -78,7 +78,7 @@ public class Game {
         for (Player player : players) {
             string.append(player.getName()).append("\r\n");
         }
-        silent.send("Das Spiel kann beginnen. Folgende Spieler spielen mit:\r\n\r\n" + string.toString() + "\r\nViel Spaß!", id);
+        silent.send("Das Spiel kann beginnen. Folgende Spieler spielen mit:\r\n\r\n" + string.toString() + "\r\n" + activePlayer + "darf als erstes ziehen.", id);
         this.movesLeft = players.size();
         Collections.shuffle(players);
         this.activePlayer = players.get(0);
