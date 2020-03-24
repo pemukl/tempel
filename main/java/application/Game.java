@@ -5,9 +5,9 @@ import org.telegram.abilitybots.api.sender.SilentSender;
 import java.util.*;
 
 public class Game {
-    private final int numGold;
-    private final int numLeer;
-    private final int numFeuerfallen;
+    private int numGold;
+    private int numLeer;
+    private int numFeuerfallen;
     
     private long ID;
     private String name;
@@ -19,15 +19,49 @@ public class Game {
 
     Game(long chatID){
         this.ID = chatID;
-    }
-    
-    public Game(List<Player> players) {
-        this.movesLeft = players.size();
-        Collections.shuffle(players);
-        this.activePlayer = players.get(0);
         this.exposedGold = 0;
         this.exposedLeer = 0;
         this.exposedFeuerfallen = 0;
+        this.round = 5;
+    }
+
+    public void setSilent(SilentSender silent){
+        this.silent = silent;
+    }
+
+    public long getID() {
+        return ID;
+    }
+
+    public void setName(String name){
+        this.name = name;
+    }
+
+    public String getName(){
+        return this.name;
+    }
+
+    public void addPlayer(Player player){
+        players.add(player);
+        silent.send("Spieler " + player.getName() + " ist dem Spiel beigetreten.",getID());
+    }
+
+    public Player findPlayer(long ID){
+        for (Player player: players) {
+            if(player.getID() == ID)
+                return player;
+        }
+        return null;
+    }
+
+    public void play(){
+        silent.send("Play Method called on Game! Following Players registred:",getID());
+        for (Player player: players ) {
+            silent.send(player.getName(),getID());
+        }
+        this.movesLeft = players.size();
+        Collections.shuffle(players);
+        this.activePlayer = players.get(0);
         int numWaechterinnen;
         int numAbenteurer;
         switch (players.size()) {
@@ -94,7 +128,6 @@ public class Game {
                 this.numLeer = 0;
                 this.numFeuerfallen = 0;
         }
-        this.round = 5;
         List<Role> roles = new ArrayList<>();
         for (int x = 0; x < numAbenteurer; x++) {
             roles.add(Role.ABENTEURER);
@@ -105,42 +138,6 @@ public class Game {
         Collections.shuffle(roles);
         for (Player player : players) {
             player.setRole(roles.remove(0));
-        }
-    }
-
-    public void setSilent(SilentSender silent){
-        this.silent = silent;
-    }
-
-    public long getID() {
-        return ID;
-    }
-
-    public void setName(String name){
-        this.name = name;
-    }
-
-    public String getName(){
-        return this.name;
-    }
-
-    public void addPlayer(Player player){
-        players.add(player);
-        silent.send("Spieler " + player.getName() + " ist dem Spiel beigetreten.",getID());
-    }
-
-    public Player findPlayer(long ID){
-        for (Player player: players) {
-            if(player.getID() == ID)
-                return player;
-        }
-        return null;
-    }
-
-    public void play(){
-        silent.send("Play Method called on Game! Following Players registred:",getID());
-        for (Player player: players ) {
-            silent.send(player.getName(),getID());
         }
         while (isFinished() && round != 5) {
             if (movesLeft == 0) {
