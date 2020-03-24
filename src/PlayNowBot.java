@@ -59,7 +59,6 @@ public class PlayNowBot extends AbilityBot {
     public Reply replyToQuery() {
         // getChatId is a public utility function in rg.telegram.abilitybots.api.util.AbilityUtils
         Consumer<Update> action = upd -> {
-            if (upd.hasCallbackQuery()){
                 Player player = Player.getPlayer(upd.getCallbackQuery().getFrom().getId());
                 long chatId = upd.getMessage().getChatId();
                 Game game = getGame(chatId);
@@ -71,7 +70,6 @@ public class PlayNowBot extends AbilityBot {
                 }else{
                     player.say("Du kannst " + chosenOne.getName() + " nicht auswählen weil Du nicht am Zug bist.");
                 }
-            }
         };
 
         return Reply.of(action, Flag.CALLBACK_QUERY);
