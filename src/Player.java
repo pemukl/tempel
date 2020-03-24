@@ -17,7 +17,7 @@ public class Player {
     private Game currentGame;
     public SilentSender silent;
 
-    public Player(long id, Game game) {
+    public Player(long id, String name, Game game) {
         this.currentGame = game;
         this.id = id;
         this.cards = new ArrayList<>();
@@ -41,8 +41,8 @@ public class Player {
     }
 
     public void setName(String name) {
+        say("Dein Name wurde zu *"+name+"* geändert.");
         this.name = name;
-        say("Dein Name wurde festgelegt, " + name);
     }
 
     public List<Card> getCards() {
@@ -78,7 +78,11 @@ public class Player {
     }
 
     public void say(String message) {
-        silent.send(message, id);
+        SendMessage sendMessagerequest = new SendMessage();
+        sendMessagerequest.setChatId(this.getId());
+        sendMessagerequest.enableMarkdown(true);
+        sendMessagerequest.setText(message);
+        silent.execute(sendMessagerequest);
     }
 
     public Player letChoose(List<Player> selection) {

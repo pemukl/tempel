@@ -119,10 +119,9 @@ public class PlayNowBot extends AbilityBot {
                             Game game = getGame(Long.parseLong(ctx.firstArg()));
                             silent.execute(sendMessagerequest);
 
-                            Player player = new Player(ctx.chatId(), game);
+                            Player player = new Player(ctx.chatId(),ctx.user().getUserName(), game);
                             player.setSilent(silent);
                             player.say("Du möchtest dem Spiel " + game.getName() + " beitreten.");
-                            player.setName(ctx.user().getUserName());
                             game.addPlayer(player);
 
 
@@ -200,7 +199,7 @@ public class PlayNowBot extends AbilityBot {
                                     game.setName(ctx.firstArg());
                                 } else {
                                     game.setName(ctx.firstArg());
-                                    Player dummy = new Player(12345, game);
+                                    Player dummy = new Player(12345, "Dummy", game);
                                     dummy.setName(ctx.secondArg());
                                 }
                             }
