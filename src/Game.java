@@ -161,7 +161,7 @@ public class Game {
         string.append("**Feuerfallen: ").append(exposedFeuerfallen).append("**/").append(numFeuerfallen).append("\r\n");
         string.append("**Leer: ").append(exposedLeer).append("**/").append(numLeer).append("\r\n");
         if (movesLeft == 0)
-            string.append("\r\n\r\nEs sind **keine** Züge mehr übrig.");
+            string.append("\r\n\r\nEs sind *keine* Züge mehr übrig.");
         else
             string.append("\r\n\r\nEs sind noch **").append(movesLeft).append("** Züge übrig.");
         sendMarkdown("Das sind die Karten der Mitspieler:\r\n\r\n" + string.toString());
