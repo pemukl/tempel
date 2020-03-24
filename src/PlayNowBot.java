@@ -60,8 +60,6 @@ public class PlayNowBot extends AbilityBot {
                     sendMessagerequest.setText("*Hello* _world_ ! \u26BD");
 
                     silent.execute(sendMessagerequest);
-                    System.out.println("I greeted " + ctx.chatId());
-
                 })
                 .build();
     }
@@ -135,9 +133,6 @@ public class PlayNowBot extends AbilityBot {
                             String name = upd.getMessage().getText();
                             Player player = getPlayer(chatId);
                             player.setName(name);
-                            System.out.println("New Player created: " + player.getName() + " (" + player.getId() + ")");
-
-
                         },
                         MESSAGE,
                         REPLY,

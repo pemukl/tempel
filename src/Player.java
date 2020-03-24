@@ -87,7 +87,6 @@ public class Player {
     }
 
     public Player letChoose(List<Player> selection) {
-        System.out.println("Player: " + selection);
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(currentGame.getId());
         sendMessage.setText("Jetzt ist " + name + " dran. Bei wem willst du eine Türe öffnen?");

@@ -114,7 +114,6 @@ public class Game {
             if (!player.getCards().isEmpty() && player != activePlayer)
                 selection.add(player);
         }
-        System.out.println("letting Choose " + activePlayer.getName() + " from " + Player.playersToStrings(selection));
         activePlayer.letChoose(selection);
     }
 
@@ -182,7 +181,6 @@ public class Game {
                 if (!player.getCards().isEmpty() && player != activePlayer)
                     selection.add(player);
             }
-            System.out.println("letting Choose " + activePlayer.getName() + " from " + Player.playersToStrings(selection));
             activePlayer.letChoose(selection);
         } else
             finished();
