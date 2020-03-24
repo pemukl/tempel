@@ -4,6 +4,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Player {
     private String name;
@@ -76,7 +77,7 @@ public class Player {
     }
 
     public static Player getPlayer(long id) {
-        System.out.println("searching for " + id + " in " + players);
+        System.out.println("searching for " + id + " in " + playersToStrings(players));
         for (Player player : players) {
             if (player.getId() == id)
                 return player;
@@ -84,27 +85,26 @@ public class Player {
         return null;
     }
 
+    static public List<String> playersToStrings(List<Player> players){
+        return players.stream().map(player -> player.getName()).collect(Collectors.toList());
+    }
+
+    public void say(String message){
+        silent.send(message,id);
+    }
+
     public Player letChoose(List<Player> selection) {
         System.out.println("Player: " + selection);
         SendMessage sendMessage = new SendMessage();
-        sendMessage.setChatId(getId());
+        sendMessage.setChatId(currentGame.getId());
         sendMessage.setText("Bei wem willst Du eine Türe öffnen?");
-        sendMessage.setReplyMarkup(getKeyboard(selection, -1));
+        sendMessage.setReplyMarkup(getKeyboard(selection));
         currentGame.silent.execute(sendMessage);
         return selection.get(0);
     }
 
-    private InlineKeyboardMarkup getKeyboard(List<Player> players, int action) {
+    private InlineKeyboardMarkup getKeyboard(List<Player> players) {
 
-        if (action == 1) {
-            return null;
-        } else if ((action == 2)) {
-            return null;
-        } else if (action == -1) {
-
-        } else {
-
-        }
         InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
         for (Player player : players) {

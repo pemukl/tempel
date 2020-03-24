@@ -63,6 +63,13 @@ public class Game {
         int numWaechterinnen;
         int numAbenteurer;
         switch (players.size()) {
+            case 2:
+                numAbenteurer = 1;
+                numWaechterinnen = 1;
+                this.numGold = 3;
+                this.numLeer = 3;
+                this.numFeuerfallen = 4;
+                break;
             case 3:
                 numAbenteurer = 2;
                 numWaechterinnen = 2;
@@ -134,11 +141,15 @@ public class Game {
             roles.add(Role.WAECHTERIN);
         }
         Collections.shuffle(roles);
-        for (Player player : players) {
-            player.setRole(roles.remove(0));
-        }
         distributeCards();
-        while (isFinished() && round != 1) {
+        for (Player player : players) {
+            Role role = roles.remove(0);
+            player.setRole(role);
+            player.say("Du bist " + role);
+            player.say("Du hast folgende Karten bekommen " + player.getCards());
+        }
+
+        while (!isFinished() && round != 1) {
             if (movesLeft == 0) {
                 nextRound();
             } else {
@@ -147,6 +158,7 @@ public class Game {
                     if (!player.getCards().isEmpty() && player != activePlayer)
                         selection.add(player);
                 }
+                System.out.println("letting Choose " + activePlayer.getName() + " from " + Player.playersToStrings(selection));
                 nextMove(activePlayer.letChoose(selection));
             }
         }

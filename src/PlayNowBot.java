@@ -1,5 +1,6 @@
 import org.telegram.abilitybots.api.bot.AbilityBot;
 import org.telegram.abilitybots.api.objects.Ability;
+import org.telegram.abilitybots.api.objects.Flag;
 import org.telegram.abilitybots.api.objects.Reply;
 import org.telegram.abilitybots.api.objects.ReplyFlow;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -15,6 +16,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import static org.telegram.abilitybots.api.objects.Flag.MESSAGE;
@@ -49,8 +51,16 @@ public class PlayNowBot extends AbilityBot {
                 .info("says hello world!")
                 .locality(ALL)
                 .privacy(PUBLIC)
-                .action(ctx -> silent.send("Hello world!", ctx.chatId()))
+                .action(ctx -> {silent.send("Hello world!", ctx.chatId());
+                    System.out.println("I greeted "+ctx.chatId());})
                 .build();
+    }
+
+    public Reply replyToQuery() {
+        // getChatId is a public utility function in rg.telegram.abilitybots.api.util.AbilityUtils
+        Consumer<Update> action = upd -> silent.send("Yuck!", getChatId(upd));
+
+        return Reply.of(action, Flag.CALLBACK_QUERY);
     }
 
     public Ability startGame() {
@@ -85,8 +95,7 @@ public class PlayNowBot extends AbilityBot {
                             SendMessage sendMessagerequest = new SendMessage();
                             sendMessagerequest.setChatId(ctx.chatId().toString());
                             Game game = getGame(Long.parseLong(ctx.firstArg()));
-                            System.out.println("recieved start on game: " + game + " vs games: " + games);
-                            sendMessagerequest.setText("Du wurdest in die Gruppe (" + game.getName() + ") eingeloggt.");
+                            sendMessagerequest.setText("Du möchtest dem Spiel " + game.getName() + " beitreten.");
                             silent.execute(sendMessagerequest);
 
                             Player player = new Player(ctx.chatId(), game);
@@ -99,13 +108,11 @@ public class PlayNowBot extends AbilityBot {
                         }
                 )
                 .reply(upd -> {
-                            // Prints to console
-                            System.out.println("New Player: " + upd.getMessage().getText());
-                            // Sends message
                             long chatId = upd.getMessage().getChatId();
                             String name = upd.getMessage().getText();
                             Player player = Player.getPlayer(chatId);
                             player.setName(name);
+                            System.out.println("New Player created: " + player.getName() + " (" + player.getId() + ")");
 
 
                         },
@@ -118,11 +125,12 @@ public class PlayNowBot extends AbilityBot {
 
     }
 
-    public Ability createGame() {
+
+    public Ability setupGame() {
         String frage = "Wie Soll das Spiel heißen?";
         return Ability
                 .builder()
-                .name("create")
+                .name("setup")
                 .info("Prepares a Game.")
                 .locality(GROUP)
                 .privacy(ADMIN)
@@ -159,6 +167,17 @@ public class PlayNowBot extends AbilityBot {
                 .locality(GROUP)
                 .privacy(ADMIN)
                 .action(ctx -> {
+                            if(getGame(ctx.chatId())==null){
+                                Game game = new Game(ctx.chatId());
+                                game.setSilent(silent);
+                                games.add(game);
+                                if (ctx.arguments().length==0){
+                                    game.setName("TempelDesSchreckens");
+                                } else {
+                                    game.setName(ctx.firstArg());
+                                }
+                            }
+
                             SendMessage sendMessagerequest = new SendMessage();
 
                             sendMessagerequest.setChatId(ctx.chatId().toString());

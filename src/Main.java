@@ -9,7 +9,7 @@ public class Main {
 
     public static void main(String[] args) {
 
-        String telegramBotToken = null, slackSecret = null, telegramBotName = null;
+        String telegramBotToken = null, telegramBotName = null;
         long telegramAdminChatID = -1;
 
         File file = new File("config.dat");
@@ -45,8 +45,6 @@ public class Main {
 
                         if (split[0].equalsIgnoreCase("telegramBotToken")) {
                             telegramBotToken = split[1];
-                        } else if (split[0].equalsIgnoreCase("slackSecret")) {
-                            slackSecret = split[1];
                         } else if (split[0].equalsIgnoreCase("telegramAdminChatID")) {
                             telegramAdminChatID = Long.parseLong(split[1]);
                         } else if (split[0].equalsIgnoreCase("telegramBotName")) {
@@ -64,7 +62,6 @@ public class Main {
                 FileWriter fileWriter = new FileWriter(file);
 
                 fileWriter.append("telegramBotToken=").append(telegramBotToken == null ? "" : telegramBotToken).append('\n');
-                fileWriter.append("slackSecret=").append(slackSecret == null ? "" : slackSecret).append('\n');
                 fileWriter.append("telegramAdminChatID=").append(String.valueOf(telegramAdminChatID == -1 ? "" : telegramAdminChatID)).append('\n');
                 fileWriter.append("telegramBotName=").append(telegramBotName == null ? "" : telegramBotName).append('\n');
 
