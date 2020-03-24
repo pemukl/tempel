@@ -65,12 +65,9 @@ public class PlayNowBot extends AbilityBot {
             CallbackQuery query = upd.getCallbackQuery();
             long pusher = query.getFrom().getId();
             Player player = Player.getPlayer(pusher);
-            System.out.println("Pushed by:" + pusher);
             long chatId = query.getMessage().getChatId();
             Game game = getGame(chatId);
-            silent.send("Knopf ("+query.getData()+") gedrückt von: " + player.getName(), getChatId(upd));
             long chosenId = Long.parseLong(query.getData().split("player:")[1]);
-            System.out.println("Callback Query mit ID: " + chosenId);
             Player chosenOne = Player.getPlayer(chosenId);
             if(game.getActivePlayer().getId() == player.getId()){
                 game.silent.send(player.getName() + " chose " + chosenOne.getName(),game.getId());
