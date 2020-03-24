@@ -4,6 +4,7 @@ import org.telegram.abilitybots.api.objects.Flag;
 import org.telegram.abilitybots.api.objects.Reply;
 import org.telegram.abilitybots.api.objects.ReplyFlow;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ForceReplyKeyboard;
@@ -61,15 +62,16 @@ public class PlayNowBot extends AbilityBot {
     public Reply replyToQuery() {
         // getChatId is a public utility function in rg.telegram.abilitybots.api.util.AbilityUtils
         Consumer<Update> action = upd -> {
-            Player player = Player.getPlayer(upd.getCallbackQuery().getFrom().getId());
-            long chatId = upd.getCallbackQuery().getMessage().getChatId();
+            CallbackQuery query = upd.getCallbackQuery();
+            Player player = Player.getPlayer(query.getFrom().getId());
+            long chatId = query.getMessage().getChatId();
             Game game = getGame(chatId);
-            silent.send("Knopf gedrückt von: " + player.getName(), getChatId(upd));
-            long chosenId = Long.parseLong(upd.getCallbackQuery().getData());
+            silent.send("Knopf ("+query.getData()+") gedrückt von: " + player.getName(), getChatId(upd));
+            long chosenId = Long.parseLong(query.getData().split("player:")[1]);
             Player chosenOne = Player.getPlayer(chosenId);
-            if (game.getActivePlayer().getId() == player.getId()) {
-                game.silent.send(player.getName() + " chose " + chosenOne.getName(), game.getId());
-            } else {
+            if(game.getActivePlayer().getId() == player.getId()){
+                game.silent.send(player.getName() + " chose " + chosenOne.getName(),game.getId());
+            }else{
                 player.say("Du kannst " + chosenOne.getName() + " nicht auswählen weil Du nicht am Zug bist.");
             }
         };
@@ -185,8 +187,13 @@ public class PlayNowBot extends AbilityBot {
                                 games.add(game);
                                 if (ctx.arguments().length == 0) {
                                     game.setName("TempelDesSchreckens");
+                                } else if (ctx.arguments().length==1){
+                                    game.setName(ctx.firstArg());
                                 } else {
                                     game.setName(ctx.firstArg());
+                                    Player dummy = new Player(12345,game);
+                                    game.addPlayer(dummy);
+                                    dummy.setName(ctx.secondArg());
                                 }
                             }
 
