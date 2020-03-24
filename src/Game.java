@@ -119,22 +119,22 @@ public class Game {
     }
 
     public void nextMove(Player nextPlayer) {
-        silent.send("__" + activePlayer.getName() + "__ geht zu __" + nextPlayer.getName() + "__.", id);
+        silent.send("_" + activePlayer.getName() + "_ geht zu _" + nextPlayer.getName() + "_.", id);
         activePlayer.setHasKey(false);
         activePlayer = nextPlayer;
         activePlayer.setHasKey(true);
         Card card = activePlayer.getCards().remove(0);
         switch (card) {
             case GOLD:
-                silent.send("Ein **Gold** wurde aufgedeckt!", id);
+                silent.send("Ein *Gold* wurde aufgedeckt!", id);
                 exposedGold++;
                 break;
             case LEER:
-                silent.send("Eine **leere Karte** wurde aufgedeckt!", id);
+                silent.send("Eine *leere Karte* wurde aufgedeckt!", id);
                 exposedLeer++;
                 break;
             case FEUERFALLE:
-                silent.send("Eine **Feuerfalle** wurde aufgedeckt!", id);
+                silent.send("Eine *Feuerfalle* wurde aufgedeckt!", id);
                 exposedFeuerfallen++;
         }
         movesLeft--;
@@ -146,24 +146,24 @@ public class Game {
         for (Player player : players) {
             if (!player.getCards().isEmpty()) {
                 for (int x = 0; x < player.getCards().size(); x++) {
-                    string.append("___ ");
+                    string.append(" - ");
                 }
                 if (player.isHasKey()) {
-                    string.append("__").append(player.getName()).append("__ **(X)**\r\n");
+                    string.append("_").append(player.getName()).append("_ *(X)*\r\n");
                 } else {
-                    string.append("__").append(player.getName()).append("__\r\n");
+                    string.append("_").append(player.getName()).append("_\r\n");
                 }
                 string.append("\r\n");
             }
         }
-        string.append("\r\nDiese Karten wurden bereits aufgedeckt:\r\n").append("**Gold: ").append(exposedGold)
-                .append("**/").append(numGold).append("\r\n");
-        string.append("**Feuerfallen: ").append(exposedFeuerfallen).append("**/").append(numFeuerfallen).append("\r\n");
-        string.append("**Leer: ").append(exposedLeer).append("**/").append(numLeer).append("\r\n");
+        string.append("\r\nDiese Karten wurden bereits aufgedeckt:\r\n").append("*Gold: ").append(exposedGold)
+                .append("*/").append(numGold).append("\r\n");
+        string.append("*Feuerfallen: ").append(exposedFeuerfallen).append("*/").append(numFeuerfallen).append("\r\n");
+        string.append("*Leer: ").append(exposedLeer).append("*/").append(numLeer).append("\r\n");
         if (movesLeft == 0)
             string.append("\r\n\r\nEs sind *keine* Züge mehr übrig.");
         else
-            string.append("\r\n\r\nEs sind noch **").append(movesLeft).append("** Züge übrig.");
+            string.append("\r\n\r\nEs sind noch *").append(movesLeft).append("* Züge übrig.");
         sendMarkdown("Das sind die Karten der Mitspieler:\r\n\r\n" + string.toString());
 
 
