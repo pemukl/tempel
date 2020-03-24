@@ -69,6 +69,9 @@ public class Player {
     }
 
     public String getName() {
+        if(name==null){
+            return "name not initialized";
+        }
         return this.name;
     }
 
@@ -82,11 +85,17 @@ public class Player {
             if (player.getId() == id)
                 return player;
         }
+        System.out.println("Unknown Player.");
         return null;
     }
 
     static public List<String> playersToStrings(List<Player> players){
-        return players.stream().map(player -> player.getName()).collect(Collectors.toList());
+        List<String> array = new ArrayList<>();
+        for (Player player:players
+             ) {
+            array.add(player.getName());
+        }
+        return array;
     }
 
     public void say(String message){
