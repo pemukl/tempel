@@ -275,6 +275,7 @@ public class Game {
                 // TODO Mitteilen wer in den Teams war und das alle x Feuerfallen aufgedeckt wurden oder keine Züge mehr
             }
         }
+        running = false;
     }
 
     private void appendWinner(List<String> winner, List<String> loser, StringBuilder string) {
