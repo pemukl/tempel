@@ -70,11 +70,10 @@ public class Game {
     }
 
     public void play() {
-        if (players.size() < 2) {
+        if (players.size() < 3) {
             silent.send("Es sind leider zu wenig Spieler drin. Bitte fügt noch weitere Spieler hinzu.", id);
             return;
         }
-        // TODO was passiert wenn
         if (players.size() > 10) {
             silent.send("Es sind leider zu viele Spieler drin. Bitte erstellt mehrere Spiele.", id);
             return;
