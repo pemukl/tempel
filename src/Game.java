@@ -332,7 +332,4 @@ public class Game {
         return cards;
     }
 
-    public Player getActivePlayer(){
-        return activePlayer;
-    }
 }
