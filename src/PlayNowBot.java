@@ -244,7 +244,6 @@ public class PlayNowBot extends AbilityBot {
     }
 
     public void removeGame(Game toRemove) {
-        toRemove.destroyPlayers();
         games.remove(toRemove);
     }
 }

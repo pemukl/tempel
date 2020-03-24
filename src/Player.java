@@ -14,16 +14,11 @@ public class Player {
     private List<Card> cards;
     private boolean hasKey;
 
-    private static LinkedList<Player> players;
     private Game currentGame;
     public SilentSender silent;
 
 
     public Player(long id, Game game) {
-        if (players == null) {
-            players = new LinkedList<>();
-        }
-        players.add(this);
         this.currentGame = game;
         this.id = id;
         this.cards = new ArrayList<>();
@@ -79,16 +74,6 @@ public class Player {
         return id;
     }
 
-    public static Player getPlayer(long id) {
-        System.out.println("searching for " + id + " in " + playersToStrings(players));
-        for (Player player : players) {
-            if (player.getId() == id)
-                return player;
-        }
-        System.out.println("Unknown Player.");
-        return null;
-    }
-
     static public List<String> playersToStrings(List<Player> players) {
         List<String> array = new ArrayList<>();
         for (Player player : players
@@ -123,9 +108,5 @@ public class Player {
         }
         markupInline.setKeyboard(rowsInline);
         return markupInline;
-    }
-
-    public void destroy() {
-        players.remove(this);
     }
 }
