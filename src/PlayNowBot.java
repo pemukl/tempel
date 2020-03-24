@@ -115,10 +115,10 @@ public class PlayNowBot extends AbilityBot {
                             silent.execute(sendMessagerequest);
 
                             Player player = new Player(ctx.chatId(), game);
-                            player.say("Du möchtest dem Spiel " + game.getName() + " beitreten.");
-                            player.setName(ctx.user().toString());
-                            game.addPlayer(player);
                             player.setSilent(silent);
+                            player.say("Du möchtest dem Spiel " + game.getName() + " beitreten.");
+                            player.setName(ctx.user().getUserName());
+                            game.addPlayer(player);
 
 
                             sendMessagerequest.setText(frage);
