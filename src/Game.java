@@ -169,20 +169,23 @@ public class Game {
 
         if (!isFinished() && round != 1) {
             if (movesLeft == 0) {
-                nextRound();
-            }
-            if (round != 1) {
-                List<Player> selection = new ArrayList<>();
-                for (Player player : players) {
-                    if (!player.getCards().isEmpty() && player != activePlayer)
-                        selection.add(player);
+                round--;
+                if (round != 1)
+                    nextRound();
+                else {
+                    finished();
+                    return;
                 }
-                System.out.println("letting Choose " + activePlayer.getName() + " from " + Player.playersToStrings(selection));
-                activePlayer.letChoose(selection);
             }
-        } else {
+            List<Player> selection = new ArrayList<>();
+            for (Player player : players) {
+                if (!player.getCards().isEmpty() && player != activePlayer)
+                    selection.add(player);
+            }
+            System.out.println("letting Choose " + activePlayer.getName() + " from " + Player.playersToStrings(selection));
+            activePlayer.letChoose(selection);
+        } else
             finished();
-        }
     }
 
     private boolean isFinished() {
@@ -245,7 +248,6 @@ public class Game {
 
     private void nextRound() {
         silent.send("Eine neue Runde beginnt. Jeder Spieler bekommt neue Karten.", id);
-        round--;
         distributeCards();
         this.movesLeft = players.size();
         for (Player player : players) {
