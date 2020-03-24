@@ -325,4 +325,8 @@ public class Game {
                 .count();
         return cards;
     }
+
+    public Player getActivePlayer(){
+        return activePlayer;
+    }
 }
