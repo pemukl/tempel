@@ -46,7 +46,7 @@ public class Game {
 
     public void addPlayer(Player player) {
         players.add(player);
-        silent.send("Spieler " + player.getName() + " ist dem Spiel beigetreten.", getId());
+        silent.send("Spieler " + player.getName() + " ist dem Spiel beigetreten.", id);
     }
 
     public Player findPlayer(long id) {
@@ -57,24 +57,26 @@ public class Game {
     }
 
     public void play() {
+        if (players.size() >= 3) {
+            silent.send("Es sind leider zu wenig Spieler drin. Bitte fügt noch weitere Spieler hinzu.", id);
+            return;
+        }
+        // TODO was passiert wenn
+        if(players.size() <= 10){
+            silent.send("Es sind leider zu viele Spieler drin. Bitte erstellt mehrere Spiele.", id);
+            return;
+        }
         StringBuilder string = new StringBuilder();
         for (Player player : players) {
             string.append(player.getName()).append("\r\n");
         }
-        silent.send("Das Spiel kann beginnen. Folgende Spieler spielen mit:\r\n\r\n" + string.toString() + "\r\nViel Spaß!", getId());
+        silent.send("Das Spiel kann beginnen. Folgende Spieler spielen mit:\r\n\r\n" + string.toString() + "\r\nViel Spaß!", id);
         this.movesLeft = players.size();
         Collections.shuffle(players);
         this.activePlayer = players.get(0);
         int numWaechterinnen;
         int numAbenteurer;
         switch (players.size()) {
-            case 2:
-                numAbenteurer = 1;
-                numWaechterinnen = 1;
-                this.numGold = 3;
-                this.numLeer = 3;
-                this.numFeuerfallen = 4;
-                break;
             case 3:
                 numAbenteurer = 2;
                 numWaechterinnen = 2;
@@ -151,10 +153,7 @@ public class Game {
             Role role = roles.remove(0);
             player.setRole(role);
             player.say("Du bist " + role.toString() + "!");
-
-            player.say("Du hast folgende Karten bekommen: " + player.getCards().toString());
         }
-
         while (!isFinished() && round != 1) {
             if (movesLeft == 0) {
                 nextRound();
@@ -193,6 +192,10 @@ public class Game {
                 exposedFeuerfallen++;
         }
         movesLeft--;
+        int gold = (int) activePlayer.getCards().stream().filter(card1 -> card1 == Card.GOLD).count();
+        int feuer = (int) activePlayer.getCards().stream().filter(card1 -> card1 == Card.FEUERFALLE).count();
+        int leer = (int) activePlayer.getCards().stream().filter(card1 -> card1 == Card.LEER).count();
+        activePlayer.say("Du hast nun nur noch folgende Karten:\r\n\r\n" + "Gold: " + gold + "Feuerfallen: " + feuer + "Leer: " + leer);
         // TODO Mitteilen wie viele Karten alle Spieler noch haben.
         StringBuilder string = new StringBuilder();
         for (Player player : players) {
@@ -208,12 +211,12 @@ public class Game {
                 string.append("\r\n");
             }
         }
-        string.append("\r\nDiese Karten wurden bereits aufgedeckt:\r\n").append("Gold ").append(exposedGold)
+        string.append("\r\nDiese Karten wurden bereits aufgedeckt:\r\n").append("Gold: ").append(exposedGold)
                 .append("/").append(numGold).append("\r\n");
-        string.append("Feuerfallen ").append(exposedFeuerfallen).append("/").append(numFeuerfallen).append("\r\n");
-        string.append("Leer ").append(exposedLeer).append("/").append(numLeer).append("\r\n");
+        string.append("Feuerfallen: ").append(exposedFeuerfallen).append("/").append(numFeuerfallen).append("\r\n");
+        string.append("Leer: ").append(exposedLeer).append("/").append(numLeer).append("\r\n");
         string.append("\r\n\r\nEs sind noch ").append(movesLeft).append(" Züge übrig.");
-        silent.send("Hier sind die Karten:\r\n\r\n" + string.toString(), id);
+        silent.send("Das sind die Karten der Mitspieler:\r\n\r\n" + string.toString(), id);
     }
 
     private boolean isFinished() {
@@ -289,7 +292,7 @@ public class Game {
             String string = "Leer: " + cards[0] + "\r\n" + "Gold: " + cards[1] + "\r\n" + "Feuerfallen: " + cards[2];
             if (player.isHasKey())
                 string += "\r\n\r\nDu hast gerade den Schlüssel und darfst die nächste Runde starten.";
-            silent.send("Das sind deine Karten für diese Runde:\r\n\r\n" + string, player.getId());
+            player.say("Das sind deine Karten für diese Runde:\r\n\r\n" + string);
         }
     }
 
@@ -314,6 +317,11 @@ public class Game {
                 cardsForPlayer.add(cards.remove(0));
             }
             player.setCards(cardsForPlayer);
+            int gold = (int) cardsForPlayer.stream().filter(card -> card == Card.GOLD).count();
+            int feuer = (int) cardsForPlayer.stream().filter(card -> card == Card.FEUERFALLE).count();
+            int leer = (int) cardsForPlayer.stream().filter(card -> card == Card.LEER).count();
+            player.say("----------------- Neue Runde -----------------");
+            player.say("Du hast folgende Karten bekommen:\r\n\r\n" + "Gold: " + gold + "Feuerfallen: " + feuer + "Leer: " + leer);
         }
     }
 
@@ -331,5 +339,4 @@ public class Game {
                 .count();
         return cards;
     }
-
 }

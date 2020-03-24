@@ -141,7 +141,7 @@ public class PlayNowBot extends AbilityBot {
 
 
     public Ability setupGame() {
-        String frage = "Wie Soll das Spiel heißen?";
+        String frage = "Wie soll das Spiel heißen?";
         return Ability
                 .builder()
                 .name("setup")
