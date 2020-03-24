@@ -178,7 +178,6 @@ public class Game {
                         selection.add(player);
                 }
                 System.out.println("letting Choose " + activePlayer.getName() + " from " + Player.playersToStrings(selection));
-
                 activePlayer.letChoose(selection);
             }
         } else {
@@ -246,9 +245,9 @@ public class Game {
 
     private void nextRound() {
         silent.send("Eine neue Runde beginnt. Jeder Spieler bekommt neue Karten.", id);
-        this.round--;
+        round--;
         distributeCards();
-        this.movesLeft = round;
+        this.movesLeft = players.size();
         for (Player player : players) {
             if (player.isHasKey())
                 player.say("Du hast gerade den Schlüssel und darfst die nächste Runde starten.");
