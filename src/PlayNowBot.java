@@ -72,6 +72,7 @@ public class PlayNowBot extends AbilityBot {
             Player chosenOne = getPlayer(chosenId);
             if (game.getActivePlayer().getId() == player.getId()) {
                 game.silent.send(player.getName() + " chose " + chosenOne.getName(), game.getId());
+                game.alternativeNextMove(chosenOne);
             } else {
                 player.say("Du kannst " + chosenOne.getName() + " nicht auswählen weil Du nicht am Zug bist.");
             }
@@ -111,10 +112,10 @@ public class PlayNowBot extends AbilityBot {
                             SendMessage sendMessagerequest = new SendMessage();
                             sendMessagerequest.setChatId(ctx.chatId().toString());
                             Game game = getGame(Long.parseLong(ctx.firstArg()));
-                            sendMessagerequest.setText("Du möchtest dem Spiel " + game.getName() + " beitreten.");
                             silent.execute(sendMessagerequest);
 
                             Player player = new Player(ctx.chatId(), game);
+                            player.say("Du möchtest dem Spiel " + game.getName() + " beitreten.");
                             player.setName(ctx.user().toString());
                             game.addPlayer(player);
                             player.setSilent(silent);

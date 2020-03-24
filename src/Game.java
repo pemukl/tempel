@@ -105,6 +105,17 @@ public class Game {
             player.say("Du bist " + player.getRole().toString() + "!");
         }
         distributeCards();
+        if(true){
+            List<Player> selection = new ArrayList<>();
+            for (Player player : players) {
+                if (!player.getCards().isEmpty() && player != activePlayer)
+                    selection.add(player);
+            }
+            System.out.println("letting Choose " + activePlayer.getName() + " from " + Player.playersToStrings(selection));
+            activePlayer.letChoose(selection);
+        }
+
+
         while (!isFinished() && round != 1) {
             if (movesLeft == 0) {
                 nextRound();
@@ -168,6 +179,67 @@ public class Game {
         else
             string.append("\r\n\r\nEs sind noch **").append(movesLeft).append("** Züge übrig.");
         silent.send("Das sind die Karten der Mitspieler:\r\n\r\n" + string.toString(), id);
+    }
+
+    public void alternativeNextMove(Player nextPlayer) {
+        silent.send(activePlayer.getName() + " geht zu " + nextPlayer.getName() + ".", id);
+        activePlayer.setHasKey(false);
+        activePlayer = nextPlayer;
+        activePlayer.setHasKey(true);
+        Card card = activePlayer.getCards().remove(0);
+        switch (card) {
+            case GOLD:
+                silent.send("Ein Gold wurde aufgedeckt!", id);
+                exposedGold++;
+                break;
+            case LEER:
+                silent.send("Eine leere Karte wurde aufgedeckt!", id);
+                exposedLeer++;
+                break;
+            case FEUERFALLE:
+                silent.send("Eine Feuerfalle wurde aufgedeckt!", id);
+                exposedFeuerfallen++;
+        }
+        movesLeft--;
+        int gold = (int) activePlayer.getCards().stream().filter(card1 -> card1 == Card.GOLD).count();
+        int feuer = (int) activePlayer.getCards().stream().filter(card1 -> card1 == Card.FEUERFALLE).count();
+        int leer = (int) activePlayer.getCards().stream().filter(card1 -> card1 == Card.LEER).count();
+        activePlayer.say("Du hast nun nur noch folgende Karten:\r\n\r\n" + "Gold: " + gold + "\r\nFeuerfallen: " + feuer + "\r\nLeer: " + leer);
+        StringBuilder string = new StringBuilder();
+        for (Player player : players) {
+            if (!player.getCards().isEmpty()) {
+                if (player.isHasKey()) {
+                    string.append(player.getName()).append(" (X)\r\n");
+                } else {
+                    string.append(player.getName()).append("\r\n");
+                }
+                for (int x = 0; x < player.getCards().size(); x++) {
+                    string.append("-");
+                }
+                string.append("\r\n");
+            }
+        }
+        string.append("\r\nDiese Karten wurden bereits aufgedeckt:\r\n").append("Gold: ").append(exposedGold)
+                .append("/").append(numGold).append("\r\n");
+        string.append("Feuerfallen: ").append(exposedFeuerfallen).append("/").append(numFeuerfallen).append("\r\n");
+        string.append("Leer: ").append(exposedLeer).append("/").append(numLeer).append("\r\n");
+        string.append("\r\n\r\nEs sind noch ").append(movesLeft).append(" Züge übrig.");
+        silent.send("Das sind die Karten der Mitspieler:\r\n\r\n" + string.toString(), id);
+
+        if (movesLeft == 0) {
+            nextRound();
+        }
+        List<Player> selection = new ArrayList<>();
+        for (Player player : players) {
+            if (!player.getCards().isEmpty() && player != activePlayer)
+                selection.add(player);
+        }
+        System.out.println("letting Choose " + activePlayer.getName() + " from " + Player.playersToStrings(selection));
+        if(!isFinished() && round != 1) {
+            activePlayer.letChoose(selection);
+        } else {
+            finished();
+        }
     }
 
     private boolean isFinished() {
