@@ -249,7 +249,7 @@ public class Game {
             for (String s : winner) {
                 string.append(s).append("\r\n");
             }
-            string.append("\r\nHerzlichen Glückwunsch!\r\n\r\nVerloren haben:");
+            string.append("\r\nHerzlichen Glückwunsch!\r\n\r\nVerloren haben:\r\n");
             for (String s : loser) {
                 string.append(s).append("\r\n");
             }
@@ -285,7 +285,7 @@ public class Game {
         for (String s : winner) {
             string.append(s).append("\r\n");
         }
-        string.append("\r\nHerzlichen Glückwunsch!\r\n\r\nVerloren haben:");
+        string.append("\r\nHerzlichen Glückwunsch!\r\n\r\nVerloren haben:\r\n");
         for (String s : loser) {
             string.append(s).append("\r\n");
         }
