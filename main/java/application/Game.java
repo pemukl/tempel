@@ -17,7 +17,7 @@ public class Game {
     private Player activePlayer;
     private List<Player> players;
 
-    Game(long chatID){
+    public Game(long chatID){
         this.ID = chatID;
         this.exposedGold = 0;
         this.exposedLeer = 0;
@@ -144,7 +144,7 @@ public class Game {
                 nextRound();
             } else {
                 // TODO nach Spieler fragen
-                int id;
+                long id;
                 Player nextPlayer;
                 do {
                     // TODO Möglicherweise anderen Satz, falls die ID keine Karten mehr hat (also bei Wiederholung)
@@ -223,7 +223,7 @@ public class Game {
     }
 
     // TODO Möglicherweise Parameter der Map ändern und Methode entfernen
-    private Player getPlayerById(int id) {
+    private Player getPlayerById(long id) {
         return players.stream()
                 .filter(player -> player.getId() == id)
                 .findAny()
