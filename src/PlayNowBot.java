@@ -190,7 +190,7 @@ public class PlayNowBot extends AbilityBot {
                                 game.setSilent(silent);
                                 games.add(game);
                                 if (ctx.arguments().length == 0) {
-                                    game.setName("TempelDesSchreckens");
+                                    game.setName("Tempel des Schreckens");
                                 } else if (ctx.arguments().length == 1) {
                                     game.setName(ctx.firstArg());
                                 } else {
