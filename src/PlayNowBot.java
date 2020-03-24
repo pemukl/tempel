@@ -54,11 +54,10 @@ public class PlayNowBot extends AbilityBot {
                 .privacy(PUBLIC)
                 .action(ctx -> {
                     SendMessage sendMessagerequest = new SendMessage();
-
                     sendMessagerequest.setChatId(ctx.chatId());
                     sendMessagerequest.enableMarkdown(true);
                     sendMessagerequest.setText("*Hello* _world_ ! \u26BD");
-
+                    System.out.println("I greeted "+ctx.user().getId()+" in chat "+ctx.chatId()+"!");
                     silent.execute(sendMessagerequest);
                 })
                 .build();
