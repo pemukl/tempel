@@ -157,7 +157,7 @@ public class Game {
         string.append("**Feuerfallen: ").append(exposedFeuerfallen).append("**/").append(numFeuerfallen).append("\r\n");
         string.append("**Leer: ").append(exposedLeer).append("**/").append(numLeer).append("\r\n");
         if (movesLeft == 0)
-            string.append("\r\n\r\nEs **keine** Züge mehr übrig.");
+            string.append("\r\n\r\nEs sind **keine** Züge mehr übrig.");
         else
             string.append("\r\n\r\nEs sind noch **").append(movesLeft).append("** Züge übrig.");
         silent.send("Das sind die Karten der Mitspieler:\r\n\r\n" + string.toString(), id);
@@ -200,7 +200,7 @@ public class Game {
             for (String s : winner) {
                 string.append(s).append("\r\n");
             }
-            string.append("\r\nHerzlichen Glückwunsch!\r\n\r\nVerloren haben:\r\n");
+            string.append("\r\nHerzlichen Glückwunsch!\r\n\r\n_____________________\r\n\r\nVerloren haben:\r\n");
             for (String s : loser) {
                 string.append(s).append("\r\n");
             }
@@ -231,7 +231,7 @@ public class Game {
         for (String s : winner) {
             string.append(s).append("\r\n");
         }
-        string.append("\r\nHerzlichen Glückwunsch!\r\n\r\nVerloren haben:\r\n");
+        string.append("\r\nHerzlichen Glückwunsch!\r\n\r\n_____________________\r\n\r\nVerloren haben:\r\n");
         for (String s : loser) {
             string.append(s).append("\r\n");
         }
@@ -241,8 +241,8 @@ public class Game {
 
     private void nextRound() {
         silent.send("Eine neue Runde beginnt. Jeder Spieler bekommt neue Karten.", id);
-        distributeCards();
         this.round--;
+        distributeCards();
         this.movesLeft = round;
         for (Player player : players) {
             if (player.isHasKey())
@@ -264,7 +264,10 @@ public class Game {
         for (int x = 0; x < feuerfallenLeft; x++) {
             cards.add(Card.FEUERFALLE);
         }
+        System.out.println(cards);
         Collections.shuffle(cards);
+        System.out.println(cards);
+        System.out.println(round);
         for (Player player : players) {
             List<Card> cardsForPlayer = new ArrayList<>();
             for (int y = 0; y < round; y++) {
@@ -279,6 +282,7 @@ public class Game {
     }
 
     private int[] getNumOfCardsFromPlayer(Player player) {
+        System.out.println("Number");
         int[] cards = new int[3];
         List<Card> playerCards = player.getCards();
         cards[0] = (int) playerCards.stream()
