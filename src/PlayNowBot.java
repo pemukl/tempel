@@ -30,7 +30,7 @@ public class PlayNowBot extends AbilityBot {
     private long adminChatID;
 
     public static final String BOT_TOKEN = "1023104342:AAHxVpFvoGnEEzNPf41L_QFJD2cPtTIZB94";
-    public static final String BOT_USERNAME = "application.PlayNowBot";
+    public static final String BOT_USERNAME = "PlayNowBot";
     public List<Game> games = new ArrayList<>();
 
     public PlayNowBot() {
