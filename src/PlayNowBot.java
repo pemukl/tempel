@@ -49,7 +49,7 @@ public class PlayNowBot extends AbilityBot {
         return Ability
                 .builder()
                 .name("hello")
-                .info("says hello world!")
+                .info("says hello world! ")
                 .locality(ALL)
                 .privacy(PUBLIC)
                 .action(ctx -> {
@@ -57,7 +57,7 @@ public class PlayNowBot extends AbilityBot {
 
                     sendMessagerequest.setChatId(ctx.chatId());
                     sendMessagerequest.enableMarkdown(true);
-                    sendMessagerequest.setText("*Hello* _world_ !");
+                    sendMessagerequest.setText("*Hello* _world_ ! \u26BD");
 
                     silent.execute(sendMessagerequest);
                     System.out.println("I greeted " + ctx.chatId());
@@ -149,37 +149,6 @@ public class PlayNowBot extends AbilityBot {
     }
 
 
-    public Ability setupGame() {
-        String frage = "Wie soll das Spiel heißen?";
-        return Ability
-                .builder()
-                .name("setup")
-                .info("Prepares a Game.")
-                .locality(GROUP)
-                .privacy(ADMIN)
-                .action(ctx -> {
-                            SendMessage sendMessagerequest = new SendMessage();
-                            sendMessagerequest.setChatId(ctx.chatId().toString());
-                            sendMessagerequest.setText(frage);
-                            Game game = new Game(ctx.chatId(), this);
-                            game.setSilent(silent);
-                            games.add(game);
-                            silent.forceReply(frage, ctx.chatId());
-                        }
-                )
-                .reply(upd -> {
-                            // Prints to console
-                            System.out.println("New Game: " + upd.getMessage().getText());
-                            // Sends message
-                            silent.send("New Game prepared: " + upd.getMessage().getText(), upd.getMessage().getChatId());
-                            getGame(upd.getMessage().getChatId()).setName(upd.getMessage().getText());
-                        },
-                        MESSAGE,
-                        REPLY,
-                        isReplyToBot(),
-                        isReplyToMessage(frage))
-                .build();
-    }
 
     public Ability invite() {
         return Ability
