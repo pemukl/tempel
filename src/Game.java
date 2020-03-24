@@ -1,4 +1,8 @@
 import org.telegram.abilitybots.api.sender.SilentSender;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 
 import java.util.*;
 
@@ -160,7 +164,7 @@ public class Game {
             string.append("\r\n\r\nEs sind **keine** Züge mehr übrig.");
         else
             string.append("\r\n\r\nEs sind noch **").append(movesLeft).append("** Züge übrig.");
-        silent.send("Das sind die Karten der Mitspieler:\r\n\r\n" + string.toString(), id);
+        sendMarkdown("Das sind die Karten der Mitspieler:\r\n\r\n" + string.toString());
 
 
         if (!isFinished() && round != 1) {
@@ -295,5 +299,15 @@ public class Game {
                 .filter(card -> card == Card.FEUERFALLE)
                 .count();
         return cards;
+    }
+
+    private void sendMarkdown(String str){
+        SendMessage sendMessagerequest = new SendMessage();
+
+        sendMessagerequest.setChatId(this.getId());
+        sendMessagerequest.enableMarkdown(true);
+        sendMessagerequest.setText(str);
+
+        silent.execute(sendMessagerequest);
     }
 }
