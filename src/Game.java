@@ -76,14 +76,14 @@ public class Game {
             return;
         }
         running = true;
+        this.movesLeft = players.size();
+        Collections.shuffle(players);
+        this.activePlayer = players.get(0);
         StringBuilder string = new StringBuilder();
         for (Player player : players) {
             string.append(player.getName()).append("\r\n");
         }
-        silent.send("Das Spiel kann beginnen. Folgende Spieler spielen mit:\r\n\r\n" + string.toString() + "\r\n" + activePlayer + "darf als erstes ziehen.", id);
-        this.movesLeft = players.size();
-        Collections.shuffle(players);
-        this.activePlayer = players.get(0);
+        silent.send("Das Spiel kann beginnen. Folgende Spieler spielen mit:\r\n\r\n" + string.toString() + "\r\n" + activePlayer + " darf als erstes ziehen.", id);
         int numWaechterinnen;
         int numAbenteurer;
         switch (players.size()) {
