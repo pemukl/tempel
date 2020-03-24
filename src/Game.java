@@ -1,22 +1,63 @@
+import org.telegram.abilitybots.api.sender.SilentSender;
+
 import java.util.*;
 
 public class Game {
-
     private int numGold;
     private int numLeer;
     private int numFeuerfallen;
+
+    private long ID;
+    private String name;
+    public SilentSender silent;
+
     private int round, movesLeft, exposedGold, exposedLeer, exposedFeuerfallen;
     private Player activePlayer;
     private List<Player> players;
 
-    public Game(List<Player> players) {
+    public Game(long chatID) {
+        this.ID = chatID;
+        this.players = new ArrayList<>();
         this.exposedGold = 0;
         this.exposedLeer = 0;
         this.exposedFeuerfallen = 0;
         this.round = 5;
     }
 
+    public void setSilent(SilentSender silent) {
+        this.silent = silent;
+    }
+
+    public long getID() {
+        return ID;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return this.name;
+    }
+
+    public void addPlayer(Player player) {
+        players.add(player);
+        silent.send("Spieler " + player.getName() + " ist dem Spiel beigetreten.", getID());
+    }
+
+    public Player findPlayer(long ID) {
+        for (Player player : players) {
+            if (player.getID() == ID)
+                return player;
+        }
+        return null;
+    }
+
     public void play() {
+        silent.send("Play Method called on Game! Following Players registred:", getID());
+        for (Player player : players) {
+            silent.send(player.getName(), getID());
+        }
         this.movesLeft = players.size();
         Collections.shuffle(players);
         this.activePlayer = players.get(0);
@@ -183,7 +224,7 @@ public class Game {
     // TODO Möglicherweise Parameter der Map ändern und Methode entfernen
     private Player getPlayerById(long id) {
         return players.stream()
-                .filter(player -> player.getId() == id)
+                .filter(player -> player.getID() == id)
                 .findAny()
                 .orElse(null);
     }
