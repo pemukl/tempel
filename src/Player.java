@@ -3,8 +3,8 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Player {
     private String name;
@@ -16,7 +16,6 @@ public class Player {
 
     private Game currentGame;
     public SilentSender silent;
-
 
     public Player(long id, Game game) {
         this.currentGame = game;
@@ -56,10 +55,6 @@ public class Player {
 
     public boolean isHasKey() {
         return hasKey;
-    }
-
-    public Game getGame() {
-        return currentGame;
     }
 
     public String getName() {

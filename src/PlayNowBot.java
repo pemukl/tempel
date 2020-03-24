@@ -229,7 +229,7 @@ public class PlayNowBot extends AbilityBot {
         return null;
     }
 
-    private Player getPlayer(long id){
+    private Player getPlayer(long id) {
         for (Game game : games) {
             Player player = game.findPlayer(id);
             if (player != null)

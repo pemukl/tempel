@@ -1,19 +1,22 @@
 public enum Distribution {
 
-    Spieler2(2, 1, 1, 3, 3, 4),
-    Spieler3(3, 2, 2, 8, 5, 2),
-    Spieler4(4, 3, 2, 12, 6, 2),
-    Spieler5(5, 3, 2, 16, 7, 2),
-    Spieler6(6, 4, 2, 20, 8, 2),
-    Spieler7(7, 5, 3, 26, 7, 2),
-    Spieler8(8, 6, 3, 30, 8, 2),
-    Spieler9(9, 6, 3, 34, 9, 2),
-    Spieler10(10, 7, 4, 37, 10, 3);
+    Spieler2(1, 1, 3, 3, 4),
+    Spieler3(2, 2, 8, 5, 2),
+    Spieler4(3, 2, 12, 6, 2),
+    Spieler5(3, 2, 16, 7, 2),
+    Spieler6(4, 2, 20, 8, 2),
+    Spieler7(5, 3, 26, 7, 2),
+    Spieler8(6, 3, 30, 8, 2),
+    Spieler9(6, 3, 34, 9, 2),
+    Spieler10(7, 4, 37, 10, 3);
 
-    private final int spieler, abenteurer, waechterinnen, leer, gold, feuerfallen;
+    private final int abenteurer;
+    private final int waechterinnen;
+    private final int leer;
+    private final int gold;
+    private final int feuerfallen;
 
-    Distribution(int spieler, int abenteurer, int waechterinnen, int leer, int gold, int feuerfallen) {
-        this.spieler = spieler;
+    Distribution(int abenteurer, int waechterinnen, int leer, int gold, int feuerfallen) {
         this.abenteurer = abenteurer;
         this.waechterinnen = waechterinnen;
         this.leer = leer;
@@ -62,9 +65,5 @@ public enum Distribution {
 
     public int getFeuerfallen() {
         return feuerfallen;
-    }
-
-    public int getSpieler() {
-        return spieler;
     }
 }
