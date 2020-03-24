@@ -128,7 +128,6 @@ public class PlayNowBot extends AbilityBot {
                 .privacy(ADMIN)
                 .action(ctx -> {
                             SendMessage sendMessagerequest = new SendMessage();
-
                             sendMessagerequest.setChatId(ctx.chatId().toString());
                             sendMessagerequest.setText(frage);
                             Game game = new Game(ctx.chatId());
