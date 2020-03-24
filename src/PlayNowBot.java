@@ -58,7 +58,21 @@ public class PlayNowBot extends AbilityBot {
 
     public Reply replyToQuery() {
         // getChatId is a public utility function in rg.telegram.abilitybots.api.util.AbilityUtils
-        Consumer<Update> action = upd -> silent.send("Yuck!", getChatId(upd));
+        Consumer<Update> action = upd -> {
+            if (upd.hasCallbackQuery()){
+                Player player = Player.getPlayer(upd.getCallbackQuery().getFrom().getId());
+                long chatId = upd.getMessage().getChatId();
+                Game game = getGame(chatId);
+                silent.send("Knopf gedrückt von: " + player.getName(), getChatId(upd));
+                long chosenId = Long.parseLong(upd.getCallbackQuery().getData());
+                Player chosenOne = Player.getPlayer(chosenId);
+                if(game.getActivePlayer().getId() = player.getId()){
+                    game.silent.send(player.getName() + " chose " + chosenOne.getName(),game.getId());
+                }else{
+                    player.say("Du kannst " + chosenOne.getName() + " nicht auswählen weil Du nicht am Zug bist.");
+                }
+            }
+        };
 
         return Reply.of(action, Flag.CALLBACK_QUERY);
     }
