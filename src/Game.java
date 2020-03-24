@@ -151,7 +151,7 @@ public class Game {
             Role role = roles.remove(0);
             player.setRole(role);
             player.say("Du bist " + role.toString() + "!");
-            
+
             player.say("Du hast folgende Karten bekommen: " + player.getCards().toString());
         }
 
