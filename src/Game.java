@@ -171,14 +171,16 @@ public class Game {
             if (movesLeft == 0) {
                 nextRound();
             }
-            List<Player> selection = new ArrayList<>();
-            for (Player player : players) {
-                if (!player.getCards().isEmpty() && player != activePlayer)
-                    selection.add(player);
-            }
-            System.out.println("letting Choose " + activePlayer.getName() + " from " + Player.playersToStrings(selection));
+            if (round != 1) {
+                List<Player> selection = new ArrayList<>();
+                for (Player player : players) {
+                    if (!player.getCards().isEmpty() && player != activePlayer)
+                        selection.add(player);
+                }
+                System.out.println("letting Choose " + activePlayer.getName() + " from " + Player.playersToStrings(selection));
 
-            activePlayer.letChoose(selection);
+                activePlayer.letChoose(selection);
+            }
         } else {
             finished();
         }
