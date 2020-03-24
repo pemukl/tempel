@@ -43,8 +43,7 @@ public class Player {
 
     public void setName(String name) {
         this.name = name;
-        currentGame.silent.send("Dein Name wurde festgelegt, " + name, getId());
-        currentGame.addPlayer(this);
+        say("Dein Name wurde festgelegt, " + name);
     }
 
     public List<Card> getCards() {

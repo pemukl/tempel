@@ -66,7 +66,7 @@ public class Game {
     }
 
     public void play() {
-        if (players.size() < 3) {
+        if (players.size() < 2) {
             silent.send("Es sind leider zu wenig Spieler drin. Bitte fügt noch weitere Spieler hinzu.", id);
             return;
         }

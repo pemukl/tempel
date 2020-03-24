@@ -64,12 +64,12 @@ public class PlayNowBot extends AbilityBot {
         Consumer<Update> action = upd -> {
             CallbackQuery query = upd.getCallbackQuery();
             long pusher = query.getFrom().getId();
-            Player player = Player.getPlayer(pusher);
+            Player player = getPlayer(pusher);
             long chatId = query.getMessage().getChatId();
             Game game = getGame(chatId);
             silent.send("Knopf (" + query.getData() + ") gedrückt von: " + player.getName(), getChatId(upd));
             long chosenId = Long.parseLong(query.getData().split("player:")[1]);
-            Player chosenOne = Player.getPlayer(chosenId);
+            Player chosenOne = getPlayer(chosenId);
             if (game.getActivePlayer().getId() == player.getId()) {
                 game.silent.send(player.getName() + " chose " + chosenOne.getName(), game.getId());
             } else {
@@ -115,6 +115,8 @@ public class PlayNowBot extends AbilityBot {
                             silent.execute(sendMessagerequest);
 
                             Player player = new Player(ctx.chatId(), game);
+                            player.setName(ctx.user().toString());
+                            game.addPlayer(player);
                             player.setSilent(silent);
 
 
@@ -126,7 +128,7 @@ public class PlayNowBot extends AbilityBot {
                 .reply(upd -> {
                             long chatId = upd.getMessage().getChatId();
                             String name = upd.getMessage().getText();
-                            Player player = Player.getPlayer(chatId);
+                            Player player = getPlayer(chatId);
                             player.setName(name);
                             System.out.println("New Player created: " + player.getName() + " (" + player.getId() + ")");
 
@@ -222,6 +224,15 @@ public class PlayNowBot extends AbilityBot {
         for (Game game : games) {
             if (game.getId() == id)
                 return game;
+        }
+        return null;
+    }
+
+    private Player getPlayer(long id){
+        for (Game game : games) {
+            Player player = game.findPlayer(id);
+            if (player != null)
+                return player;
         }
         return null;
     }
