@@ -119,22 +119,22 @@ public class Game {
     }
 
     public void nextMove(Player nextPlayer) {
-        silent.send("_" + activePlayer.getName() + "_ geht zu _" + nextPlayer.getName() + "_.", id);
+        sendMarkdown("_" + activePlayer.getName() + "_ geht zu _" + nextPlayer.getName() + "_.");
         activePlayer.setHasKey(false);
         activePlayer = nextPlayer;
         activePlayer.setHasKey(true);
         Card card = activePlayer.getCards().remove(0);
         switch (card) {
             case GOLD:
-                silent.send("Ein *Gold* wurde aufgedeckt!", id);
+                sendMarkdown("Ein *Gold* wurde aufgedeckt!");
                 exposedGold++;
                 break;
             case LEER:
-                silent.send("Eine *leere Karte* wurde aufgedeckt!", id);
+                sendMarkdown("Eine *leere Karte* wurde aufgedeckt!");
                 exposedLeer++;
                 break;
             case FEUERFALLE:
-                silent.send("Eine *Feuerfalle* wurde aufgedeckt!", id);
+                sendMarkdown("Eine *Feuerfalle* wurde aufgedeckt!");
                 exposedFeuerfallen++;
         }
         movesLeft--;
@@ -298,12 +298,12 @@ public class Game {
         return cards;
     }
 
-    private void sendMarkdown(String str) {
+    private void sendMarkdown(String message) {
         SendMessage sendMessagerequest = new SendMessage();
 
         sendMessagerequest.setChatId(this.getId());
         sendMessagerequest.enableMarkdown(true);
-        sendMessagerequest.setText(str);
+        sendMessagerequest.setText(message);
 
         silent.execute(sendMessagerequest);
     }
