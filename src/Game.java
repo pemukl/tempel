@@ -83,7 +83,7 @@ public class Game {
         for (Player player : players) {
             string.append(player.getName()).append("\r\n");
         }
-        silent.send("Das Spiel kann beginnen. Folgende Spieler spielen mit:\r\n\r\n" + string.toString() + "\r\n" + activePlayer + " darf als erstes ziehen.", id);
+        silent.send("Das Spiel kann beginnen. Folgende Spieler spielen mit:\r\n\r\n" + string.toString() + "\r\n" + activePlayer.getName() + " darf als erstes ziehen.", id);
         int numWaechterinnen;
         int numAbenteurer;
         switch (players.size()) {
