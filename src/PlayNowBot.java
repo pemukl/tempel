@@ -78,7 +78,6 @@ public class PlayNowBot extends AbilityBot {
             long chosenId = Long.parseLong(query.getData().split("player:")[1]);
             Player chosenOne = getPlayer(chosenId);
             if (game.getActivePlayer().getId() == player.getId()) {
-                game.silent.send(player.getName() + " chose " + chosenOne.getName(), game.getId());
                 game.nextMove(chosenOne);
             } else {
                 player.say("Du kannst " + chosenOne.getName() + " nicht auswählen weil Du nicht am Zug bist.");
