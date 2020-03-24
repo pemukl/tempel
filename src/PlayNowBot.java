@@ -27,7 +27,7 @@ import static org.telegram.abilitybots.api.objects.Privacy.PUBLIC;
 import static org.telegram.abilitybots.api.util.AbilityUtils.getChatId;
 
 public class PlayNowBot extends AbilityBot {
-    private long adminChatID;
+    private long adminChatId;
 
     public static final String BOT_TOKEN = "1023104342:AAHxVpFvoGnEEzNPf41L_QFJD2cPtTIZB94";
     public static final String BOT_USERNAME = "PlayNowBot";
@@ -37,9 +37,9 @@ public class PlayNowBot extends AbilityBot {
         super(BOT_TOKEN, BOT_USERNAME);
     }
 
-    PlayNowBot(String botToken, String botName, long adminChatID) {
+    PlayNowBot(String botToken, String botName, long adminChatId) {
         super(botToken, botName);
-        this.adminChatID = adminChatID;
+        this.adminChatId = adminChatId;
     }
 
     public Ability sayHelloWorld() {
@@ -62,17 +62,16 @@ public class PlayNowBot extends AbilityBot {
                 .privacy(ADMIN)
                 .action(ctx -> {
                             SendMessage sendMessagerequest = new SendMessage();
-                            long ID = ctx.chatId();
-                            sendMessagerequest.setChatId(Long.toString(ID));
+                            long id = ctx.chatId();
+                            sendMessagerequest.setChatId(Long.toString(id));
                             sendMessagerequest.setText("Das Spiel beginnt!");
                             silent.execute(sendMessagerequest);
-                            Objects.requireNonNull(getGame(ID)).play();
+                            Objects.requireNonNull(getGame(id)).play();
                         }
                 )
                 .build();
 
     }
-
 
     public Ability startPlayer() {
         String frage = "Wie willst Du heißen?";
@@ -103,9 +102,9 @@ public class PlayNowBot extends AbilityBot {
                             // Prints to console
                             System.out.println("New Player: " + upd.getMessage().getText());
                             // Sends message
-                            long chatID = upd.getMessage().getChatId();
+                            long chatId = upd.getMessage().getChatId();
                             String name = upd.getMessage().getText();
-                            Player player = Player.getPlayer(chatID);
+                            Player player = Player.getPlayer(chatId);
                             player.setName(name);
 
 
@@ -182,18 +181,17 @@ public class PlayNowBot extends AbilityBot {
                 .build();
     }
 
-    private Game getGame(long ID) {
+    private Game getGame(long id) {
         for (Game game : games) {
-            if (game.getID() == ID)
+            if (game.getId() == id)
                 return game;
         }
         return null;
     }
 
-
     @Override
     public int creatorId() {
-        return Math.toIntExact(adminChatID);
+        return Math.toIntExact(adminChatId);
     }
 
     private Predicate<Update> isReplyToMessage(String message) {
@@ -206,5 +204,4 @@ public class PlayNowBot extends AbilityBot {
     private Predicate<Update> isReplyToBot() {
         return upd -> upd.getMessage().getReplyToMessage().getFrom().getUserName().equalsIgnoreCase(getBotUsername());
     }
-
 }

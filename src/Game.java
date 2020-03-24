@@ -7,7 +7,7 @@ public class Game {
     private int numLeer;
     private int numFeuerfallen;
 
-    private long ID;
+    private final long id;
     private String name;
     public SilentSender silent;
 
@@ -15,8 +15,8 @@ public class Game {
     private Player activePlayer;
     private List<Player> players;
 
-    public Game(long chatID) {
-        this.ID = chatID;
+    public Game(long chatId) {
+        this.id = chatId;
         this.players = new ArrayList<>();
         this.exposedGold = 0;
         this.exposedLeer = 0;
@@ -28,8 +28,8 @@ public class Game {
         this.silent = silent;
     }
 
-    public long getID() {
-        return ID;
+    public long getId() {
+        return id;
     }
 
     public void setName(String name) {
@@ -42,21 +42,20 @@ public class Game {
 
     public void addPlayer(Player player) {
         players.add(player);
-        silent.send("Spieler " + player.getName() + " ist dem Spiel beigetreten.", getID());
+        silent.send("Spieler " + player.getName() + " ist dem Spiel beigetreten.", getId());
     }
 
-    public Player findPlayer(long ID) {
-        for (Player player : players) {
-            if (player.getID() == ID)
-                return player;
-        }
-        return null;
+    public Player findPlayer(long id) {
+        return players.stream()
+                .filter(player -> player.getId() == id)
+                .findAny()
+                .orElse(null);
     }
 
     public void play() {
-        silent.send("Play Method called on Game! Following Players registred:", getID());
+        silent.send("Play Method called on Game! Following Players registred:", getId());
         for (Player player : players) {
-            silent.send(player.getName(), getID());
+            silent.send(player.getName(), getId());
         }
         this.movesLeft = players.size();
         Collections.shuffle(players);
@@ -139,25 +138,16 @@ public class Game {
             player.setRole(roles.remove(0));
         }
         distributeCards();
-        List<Player> selection = new ArrayList<>();
-        for (Player player : players) {
-            if (!player.getCards().isEmpty() && player != activePlayer)
-                selection.add(player);
-        }
-        activePlayer.letChoose(selection);
         while (isFinished() && round != 1) {
             if (movesLeft == 0) {
                 nextRound();
             } else {
-                // TODO nach Spieler fragen
-                long id;
-                Player nextPlayer;
-                do {
-                    // TODO Möglicherweise anderen Satz, falls die ID keine Karten mehr hat (also bei Wiederholung)
-                    id = 0;
-                    nextPlayer = getPlayerById(id);
-                } while (nextPlayer == null || getPlayerById(id).getCards().isEmpty());
-                nextMove(nextPlayer);
+                List<Player> selection = new ArrayList<>();
+                for (Player player : players) {
+                    if (!player.getCards().isEmpty() && player != activePlayer)
+                        selection.add(player);
+                }
+                nextMove(activePlayer.letChoose(selection));
             }
         }
         finished();
@@ -165,6 +155,7 @@ public class Game {
 
     private void nextMove(Player nextPlayer) {
         // TODO Mitteilen wer zu wem gegangen ist.
+        silent.send(activePlayer.getName() + " geht zu " + nextPlayer.getName() + ".", id);
         activePlayer.setHasKey(false);
         activePlayer = nextPlayer;
         activePlayer.setHasKey(true);
@@ -172,69 +163,116 @@ public class Game {
         // TODO Mitteilen welche Karte geöffnet wurde.
         switch (card) {
             case GOLD:
+                silent.send("Ein Gold wurde aufgedeckt!", id);
                 exposedGold++;
                 break;
             case LEER:
+                silent.send("Eine leer Karte wurde aufgedeckt!", id);
                 exposedLeer++;
                 break;
             case FEUERFALLE:
+                silent.send("Eine Feuerfalle wurde aufgedeckt!", id);
                 exposedFeuerfallen++;
         }
-        // TODO Mitteilen wie viele Karten alle Spieler noch haben.
-        Map<Player, Integer> playerCards = new HashMap<>();
-        for (Player player : players) {
-            playerCards.put(player, player.getCards().size());
-        }
-        // TODO Mitteilen was schon aufgedeckt wurde
         movesLeft--;
+        // TODO Mitteilen wie viele Karten alle Spieler noch haben.
+        StringBuilder string = new StringBuilder();
+        for (Player player : players) {
+            if (!player.getCards().isEmpty()) {
+                if (player.isHasKey()) {
+                    string.append(player.getName()).append(" (X)\r\n");
+                } else {
+                    string.append(player.getName()).append("\r\n");
+                }
+                for (int x = 0; x < player.getCards().size(); x++) {
+                    string.append("-");
+                }
+                string.append("\r\n");
+            }
+        }
+        string.append("\r\nDiese Karten wurden bereits aufgedeckt:\r\n").append("Gold ").append(exposedGold)
+                .append("/").append(numGold).append("\r\n");
+        string.append("Feuerfallen ").append(exposedFeuerfallen).append("/").append(numFeuerfallen).append("\r\n");
+        string.append("Leer ").append(exposedLeer).append("/").append(numLeer).append("\r\n");
+        string.append("\r\n\r\nEs sind noch ").append(movesLeft).append(" Züge übrig.");
+        silent.send("Hier sind die Karten:\r\n\r\n" + string.toString(), id);
     }
 
     private boolean isFinished() {
         return exposedGold == numGold || exposedFeuerfallen == numFeuerfallen;
     }
 
-    private String finished() {
+    private void finished() {
         List<String> winner = new ArrayList<>();
+        List<String> loser = new ArrayList<>();
         if (exposedGold == numGold) {
             // TODO Abenteurer gewinnen
             for (Player player : players) {
                 if (player.getRole() == Role.ABENTEURER)
                     winner.add(player.getName());
+                else
+                    loser.add(player.getName());
             }
+            StringBuilder string = new StringBuilder();
+            string.append("Das ganze Gold wurde aufgedeckt!\r\n\r\nDie Gewinner sind:\r\n");
+            for (String s : winner) {
+                string.append(s).append("\r\n");
+            }
+            string.append("\r\nHerzlichen Glückwunsch!\r\n\r\nVerloren haben:");
+            for (String s : loser) {
+                string.append(s).append("\r\n");
+            }
+            string.append("\r\nVielleicht beim nächsten Mal. :(");
+            silent.send("Die Abenteurer haben gewonnen!\r\n" + string.toString(), id);
             // TODO Mitteilen wer in den Teams war und das alle x Gold aufgedeckt wurden
-            return "";
         } else {
-            // TODO Wächterinnen gewinnen
             for (Player player : players) {
                 if (player.getRole() == Role.WAECHTERIN)
                     winner.add(player.getName());
+                else
+                    loser.add(player.getName());
             }
-            // TODO Mitteilen wer in den Teams war und das alle x Feuerfallen aufgedeckt wurden oder keine Züge mehr
-            return "";
+            if (numFeuerfallen == exposedFeuerfallen) {
+                // TODO Wächterinnen gewinnen
+                StringBuilder string = new StringBuilder();
+                string.append("Alle Feuerfallen wurden aufgedeckt!\r\n\r\nDie Gewinner sind:\r\n");
+                appendWinner(winner, loser, string);
+                // TODO Mitteilen wer in den Teams war und das alle x Feuerfallen aufgedeckt wurden oder keine Züge mehr
+            } else {
+                // TODO Wächterinnen gewinnen
+                StringBuilder string = new StringBuilder();
+                string.append("Es wurde nicht das ganze Gold aufgedeckt!\r\n\r\nDie Gewinner sind:\r\n");
+                appendWinner(winner, loser, string);
+                // TODO Mitteilen wer in den Teams war und das alle x Feuerfallen aufgedeckt wurden oder keine Züge mehr
+            }
         }
     }
 
+    private void appendWinner(List<String> winner, List<String> loser, StringBuilder string) {
+        for (String s : winner) {
+            string.append(s).append("\r\n");
+        }
+        string.append("\r\nHerzlichen Glückwunsch!\r\n\r\nVerloren haben:");
+        for (String s : loser) {
+            string.append(s).append("\r\n");
+        }
+        string.append("\r\nVielleicht beim nächsten Mal. :(");
+        silent.send("Die Wächterinnen haben gewonnen!\r\n" + string.toString(), id);
+    }
+
     public void nextRound() {
+        silent.send("Eine neue Runde beginnt. Jeder Spieler bekommt neue Karten.", id);
         distributeCards();
         this.round--;
         this.movesLeft = round;
         for (Player player : players) {
             // TODO Karten den Spielern mitteilen (über ID) (x Leer, x Gold, x Feuerfallen)
             int[] cards = getNumOfCardsFromPlayer(player);
+            String string = "Leer: " + cards[0] + "\r\n" + "Gold: " + cards[1] + "\r\n" + "Feuerfallen: " + cards[2];
+            if (player.isHasKey())
+                string += "\r\n\r\nDu hast gerade den Schlüssel und darfst die nächste Runde starten.";
+            silent.send("Das sind deine Karten für diese Runde:\r\n\r\n" + string, player.getId());
         }
-        String player = Objects.requireNonNull(players.stream()
-                .filter(Player::isHasKey)
-                .findAny()
-                .orElse(null)).getName();
-        // TODO Mitteilen wer gerade den Schlüssel hat
-    }
-
-    // TODO Möglicherweise Parameter der Map ändern und Methode entfernen
-    private Player getPlayerById(long id) {
-        return players.stream()
-                .filter(player -> player.getID() == id)
-                .findAny()
-                .orElse(null);
     }
 
     private void distributeCards() {
