@@ -60,7 +60,7 @@ public class PlayNowBot extends AbilityBot {
         // getChatId is a public utility function in rg.telegram.abilitybots.api.util.AbilityUtils
         Consumer<Update> action = upd -> {
                 Player player = Player.getPlayer(upd.getCallbackQuery().getFrom().getId());
-                long chatId = upd.getMessage().getChatId();
+                long chatId = upd.getCallbackQuery().getMessage().getChatId();
                 Game game = getGame(chatId);
                 silent.send("Knopf gedrückt von: " + player.getName(), getChatId(upd));
                 long chosenId = Long.parseLong(upd.getCallbackQuery().getData());
@@ -86,7 +86,6 @@ public class PlayNowBot extends AbilityBot {
                             SendMessage sendMessagerequest = new SendMessage();
                             long id = ctx.chatId();
                             sendMessagerequest.setChatId(Long.toString(id));
-                            sendMessagerequest.setText("Das Spiel beginnt!");
                             silent.execute(sendMessagerequest);
                             Objects.requireNonNull(getGame(id)).play();
                         }
@@ -233,5 +232,10 @@ public class PlayNowBot extends AbilityBot {
 
     private Predicate<Update> isReplyToBot() {
         return upd -> upd.getMessage().getReplyToMessage().getFrom().getUserName().equalsIgnoreCase(getBotUsername());
+    }
+
+    public void removeGame(Game toRemove){
+        toRemove.destroyPlayers();
+        this.games.remove(toRemove);
     }
 }

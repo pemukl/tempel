@@ -347,4 +347,8 @@ public class Game {
                 .count();
         return cards;
     }
+
+    public void destroyPlayers(){
+        players.forEach(player -> {player.destroy();});
+    }
 }

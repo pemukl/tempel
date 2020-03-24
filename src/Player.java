@@ -116,4 +116,7 @@ public class Player {
         return markupInline;
     }
 
+    public void destroy() {
+        players.remove(this);
+    }
 }
