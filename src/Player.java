@@ -11,7 +11,7 @@ public class Player {
     private final long id;
 
     private Role role;
-    private List<Card> cards;
+    private SetOfCards cards;
     private boolean hasKey;
 
     private Game currentGame;
@@ -21,11 +21,11 @@ public class Player {
         this.currentGame = game;
         this.id = id;
         this.name = name;
-        this.cards = new ArrayList<>();
+        this.cards = new SetOfCards();
         this.hasKey = false;
     }
 
-    public void setCards(List<Card> cards) {
+    public void setCards(SetOfCards cards) {
         this.cards = cards;
     }
 
@@ -46,7 +46,7 @@ public class Player {
         this.name = name;
     }
 
-    public List<Card> getCards() {
+    public SetOfCards getCards() {
         return cards;
     }
 

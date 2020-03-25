@@ -7,6 +7,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import java.util.*;
 
 public class Game {
+
     private int numGold;
     private int numLeer;
     private int numFeuerfallen;
@@ -21,6 +22,7 @@ public class Game {
     private int round, movesLeft, exposedGold, exposedLeer, exposedFeuerfallen;
     private Player activePlayer;
     private List<Player> players;
+
 
     public Game(long chatId, PlayNowBot playNowBot) {
         this.playNowBot = playNowBot;
@@ -105,7 +107,8 @@ public class Game {
         Collections.shuffle(roles);
         for (Player player : players) {
             player.setRole(roles.remove(0));
-            player.say("Du bist " + player.getRole().toString() + "!");
+            System.out.println("Printing out Emoji: "+player.getRole().getEmoji());
+            player.say("Du bist " + player.getRole().getEmoji() + " !");
         }
         distributeCards();
         List<Player> selection = new ArrayList<>();
@@ -121,25 +124,13 @@ public class Game {
         activePlayer.setHasKey(false);
         activePlayer = nextPlayer;
         activePlayer.setHasKey(true);
-        Card card = activePlayer.getCards().remove(0);
-        switch (card) {
-            case GOLD:
-                sendMarkdown("Ein *Gold* wurde aufgedeckt!");
-                exposedGold++;
-                break;
-            case LEER:
-                sendMarkdown("Eine *leere Karte* wurde aufgedeckt!");
-                exposedLeer++;
-                break;
-            case FEUERFALLE:
-                sendMarkdown("Eine *Feuerfalle* wurde aufgedeckt!");
-                exposedFeuerfallen++;
-        }
+        Card card = activePlayer.getCards().draw();
+        sendMarkdown("Es wurde aufgedeckt: "+card.getEmoji());
         movesLeft--;
-        int gold = (int) activePlayer.getCards().stream().filter(card1 -> card1 == Card.GOLD).count();
-        int feuer = (int) activePlayer.getCards().stream().filter(card1 -> card1 == Card.FEUERFALLE).count();
-        int leer = (int) activePlayer.getCards().stream().filter(card1 -> card1 == Card.LEER).count();
-        activePlayer.say("Du hast nun nur noch folgende Karten:\r\n\r\n" + "Gold: " + gold + "\r\nFeuerfallen: " + feuer + "\r\nLeer: " + leer);
+        StringBuilder sb = new StringBuilder();
+        sb.append("Du hast nun nur noch folgende Karten:\r\n\r\n");
+        sb.append(activePlayer.getCards().toString());
+        activePlayer.say( sb.toString() );
         StringBuilder string = new StringBuilder();
         for (Player player : players) {
             if (!player.getCards().isEmpty()) {
@@ -257,7 +248,7 @@ public class Game {
         int goldLeft = numGold - exposedGold;
         int feuerfallenLeft = numFeuerfallen - exposedFeuerfallen;
         int leerLeft = numLeer - exposedLeer;
-        List<Card> cards = new ArrayList<>();
+        SetOfCards cards = new SetOfCards();
         for (int x = 0; x < goldLeft; x++) {
             cards.add(Card.GOLD);
         }
@@ -267,34 +258,19 @@ public class Game {
         for (int x = 0; x < feuerfallenLeft; x++) {
             cards.add(Card.FEUERFALLE);
         }
-        Collections.shuffle(cards);
+        cards.shuffle();
         for (Player player : players) {
-            List<Card> cardsForPlayer = new ArrayList<>();
+            SetOfCards cardsForPlayer = new SetOfCards();
             for (int y = 0; y < round; y++) {
-                cardsForPlayer.add(cards.remove(0));
+                cardsForPlayer.add(cards.draw());
             }
             player.setCards(cardsForPlayer);
-            int[] cards1 = getNumOfCardsFromPlayer(player);
             if (round != 5)
                 player.say("----------------- Neue Runde -----------------");
-            player.say("Das sind deine Karten für diese Runde:\r\n\r\n" + "Gold: " + cards1[1] + "\r\nFeuerfallen: " + cards1[2] + "\r\nLeer: " + cards1[0]);
+            player.say("Das sind deine Karten für diese Runde:\r\n\r\n" + player.getCards().print());
         }
     }
 
-    private int[] getNumOfCardsFromPlayer(Player player) {
-        int[] cards = new int[3];
-        List<Card> playerCards = player.getCards();
-        cards[0] = (int) playerCards.stream()
-                .filter(card -> card == Card.LEER)
-                .count();
-        cards[1] = (int) playerCards.stream()
-                .filter(card -> card == Card.GOLD)
-                .count();
-        cards[2] = (int) playerCards.stream()
-                .filter(card -> card == Card.FEUERFALLE)
-                .count();
-        return cards;
-    }
 
     private void sendMarkdown(String message) {
         SendMessage sendMessagerequest = new SendMessage();

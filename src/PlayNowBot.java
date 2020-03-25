@@ -36,6 +36,9 @@ public class PlayNowBot extends AbilityBot {
     public static final String BOT_USERNAME = "PlayNowBot";
     public List<Game> games = new ArrayList<>();
 
+    public static final EmojiSet texturePack = EmojiSet.NEAT;
+
+
     public PlayNowBot() {
         super(BOT_TOKEN, BOT_USERNAME);
     }
