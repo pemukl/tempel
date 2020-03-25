@@ -4,6 +4,7 @@ import org.telegram.abilitybots.api.objects.Flag;
 import org.telegram.abilitybots.api.objects.Reply;
 import org.telegram.abilitybots.api.objects.ReplyFlow;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.send.SendSticker;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -11,6 +12,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ForceReplyKeyboa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 
 import java.util.ArrayList;
@@ -67,7 +69,6 @@ public class PlayNowBot extends AbilityBot {
     }
 
     public Reply replyToQuery() {
-        // getChatId is a public utility function in rg.telegram.abilitybots.api.util.AbilityUtils
         Consumer<Update> action = upd -> {
             CallbackQuery query = upd.getCallbackQuery();
             long pusher = query.getFrom().getId();
@@ -77,13 +78,29 @@ public class PlayNowBot extends AbilityBot {
             long chosenId = Long.parseLong(query.getData().split("player:")[1]);
             Player chosenOne = getPlayer(chosenId);
             if (game.getActivePlayer().getId() == player.getId()) {
-                game.nextMove(chosenOne);
+                if(chosenOne==player){
+                    player.say("Du kannst Dich nicht selbst auswählen.");
+                } else if(chosenOne.getCards().isEmpty()){
+                    player.say("Du kannst " + chosenOne.getName() + " nicht auswählen weil er keine Karten mehr hat.");
+                } else {
+                    game.nextMove(chosenOne);
+                }
             } else {
                 player.say("Du kannst " + chosenOne.getName() + " nicht auswählen weil Du nicht am Zug bist.");
             }
         };
 
         return Reply.of(action, Flag.CALLBACK_QUERY);
+    }
+    public Reply replyToSticker() {
+        Consumer<Update> action = upd -> {
+            if (upd.getMessage().hasSticker()) {
+                System.out.println("Received Sticker: " + upd.getMessage().getSticker().getFileId());
+                silent.send(upd.getMessage().getSticker().getFileId(),upd.getMessage().getChatId());
+            }
+        };
+
+        return Reply.of(action, update -> update.getMessage().hasSticker());
     }
 
     public Ability startGame() {
@@ -120,7 +137,6 @@ public class PlayNowBot extends AbilityBot {
                             silent.execute(sendMessagerequest);
 
                             Player player = new Player(ctx.chatId(),ctx.user().getUserName(), game);
-                            player.setSilent(silent);
                             player.say("Du möchtest dem Spiel " + game.getName() + " beitreten.");
                             game.addPlayer(player);
 

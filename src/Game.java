@@ -17,9 +17,10 @@ public class Game {
     private final long id;
     private String name;
     public SilentSender silent;
-    private PlayNowBot playNowBot;
+    public PlayNowBot playNowBot;
 
-    private int round, movesLeft, exposedGold, exposedLeer, exposedFeuerfallen;
+    private int round, movesLeft;
+    private SetOfCards exposedCards;
     private Player activePlayer;
     private List<Player> players;
 
@@ -28,9 +29,7 @@ public class Game {
         this.playNowBot = playNowBot;
         this.id = chatId;
         this.players = new ArrayList<>();
-        this.exposedGold = 0;
-        this.exposedLeer = 0;
-        this.exposedFeuerfallen = 0;
+        this.exposedCards = new SetOfCards();
         this.round = 5;
         this.running = false;
     }
@@ -72,7 +71,7 @@ public class Game {
     }
 
     public void play() {
-        if (players.size() < 3) {
+        if (players.size() < 2) {
             silent.send("Es sind leider zu wenig Spieler drin. Bitte fügt noch weitere Spieler hinzu.", id);
             return;
         }
@@ -107,8 +106,8 @@ public class Game {
         Collections.shuffle(roles);
         for (Player player : players) {
             player.setRole(roles.remove(0));
-            System.out.println("Printing out Emoji: "+player.getRole().getEmoji());
-            player.say("Du bist " + player.getRole().getEmoji() + " !");
+            player.say("Deine Rolle ist " + player.getRole().getEmoji() + " !");
+            player.sendSticker(player.getRole().getStickerID());
         }
         distributeCards();
         List<Player> selection = new ArrayList<>();
@@ -127,33 +126,25 @@ public class Game {
         Card card = activePlayer.getCards().draw();
         sendMarkdown("Es wurde aufgedeckt: "+card.getEmoji());
         movesLeft--;
+        exposedCards.add(card);
+
         StringBuilder sb = new StringBuilder();
         sb.append("Du hast nun nur noch folgende Karten:\r\n\r\n");
-        sb.append(activePlayer.getCards().toString());
+        sb.append(activePlayer.getCards().print());
         activePlayer.say( sb.toString() );
+
         StringBuilder string = new StringBuilder();
-        for (Player player : players) {
-            if (!player.getCards().isEmpty()) {
-                for (int x = 0; x < player.getCards().size(); x++) {
-                    string.append(" - ");
-                }
-                if (player.isHasKey()) {
-                    string.append("_").append(player.getName()).append("_ *(X)*\r\n");
-                } else {
-                    string.append("_").append(player.getName()).append("_\r\n");
-                }
-                string.append("\r\n");
-            }
-        }
-        string.append("\r\nDiese Karten wurden bereits aufgedeckt:\r\n").append("*Gold: ").append(exposedGold)
-                .append("*/").append(numGold).append("\r\n");
-        string.append("*Feuerfallen: ").append(exposedFeuerfallen).append("*/").append(numFeuerfallen).append("\r\n");
-        string.append("*Leer: ").append(exposedLeer).append("*/").append(numLeer).append("\r\n");
+
+        string.append("\r\nRunde "+round +"/4. Bereits aufgedeckt:\r\n");
+        string.append(exposedCards.print()+"\r\n");
+        string.append("*Gold: ").append(exposedCards.countGold()).append("*/").append(numGold).append("\r\n");
+        string.append("*Feuerfallen: ").append(exposedCards.countFire()).append("*/").append(numFeuerfallen).append("\r\n");
+        string.append("*Leer: ").append(exposedCards.countEmpty()).append("*/").append(numLeer).append("\r\n");
         if (movesLeft == 0)
             string.append("\r\n\r\nEs sind *keine* Züge mehr übrig.");
         else
             string.append("\r\n\r\nEs sind noch *").append(movesLeft).append("* Züge übrig.");
-        sendMarkdown("Das sind die Karten der Mitspieler:\r\n\r\n" + string.toString());
+        sendMarkdown( string.toString());
 
 
         if (!isFinished() && round != 1) {
@@ -166,24 +157,20 @@ public class Game {
                     return;
                 }
             }
-            List<Player> selection = new ArrayList<>();
-            for (Player player : players) {
-                if (!player.getCards().isEmpty() && player != activePlayer)
-                    selection.add(player);
-            }
-            activePlayer.letChoose(selection);
+
+            activePlayer.letChoose(players);
         } else
             finished();
     }
 
     private boolean isFinished() {
-        return exposedGold == numGold || exposedFeuerfallen == numFeuerfallen;
+        return exposedCards.countGold() == numGold || exposedCards.countFire() == numFeuerfallen;
     }
 
     private void finished() {
         List<String> winner = new ArrayList<>();
         List<String> loser = new ArrayList<>();
-        if (exposedGold == numGold) {
+        if (exposedCards.countGold() == numGold) {
             for (Player player : players) {
                 if (player.getRole() == Role.ABENTEURER)
                     winner.add(player.getName());
@@ -208,7 +195,7 @@ public class Game {
                 else
                     loser.add(player.getName());
             }
-            if (numFeuerfallen == exposedFeuerfallen) {
+            if (numFeuerfallen == exposedCards.countFire()) {
                 StringBuilder string = new StringBuilder();
                 string.append("Alle Feuerfallen wurden aufgedeckt!\r\n\r\nDie Gewinner sind:\r\n");
                 appendWinner(winner, loser, string);
@@ -245,9 +232,9 @@ public class Game {
     }
 
     private void distributeCards() {
-        int goldLeft = numGold - exposedGold;
-        int feuerfallenLeft = numFeuerfallen - exposedFeuerfallen;
-        int leerLeft = numLeer - exposedLeer;
+        int goldLeft = numGold - exposedCards.countGold();
+        int feuerfallenLeft = numFeuerfallen - exposedCards.countFire();
+        int leerLeft = numLeer - exposedCards.countEmpty();
         SetOfCards cards = new SetOfCards();
         for (int x = 0; x < goldLeft; x++) {
             cards.add(Card.GOLD);
@@ -272,7 +259,7 @@ public class Game {
     }
 
 
-    private void sendMarkdown(String message) {
+    public void sendMarkdown(String message) {
         SendMessage sendMessagerequest = new SendMessage();
 
         sendMessagerequest.setChatId(this.getId());
@@ -281,4 +268,6 @@ public class Game {
 
         silent.execute(sendMessagerequest);
     }
+
+
 }

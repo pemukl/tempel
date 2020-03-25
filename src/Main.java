@@ -60,12 +60,10 @@ public class Main {
                 System.out.println("[Info] New config file was created. Please fill the needed information.");
             return;
         }
-        // Initializes dependencies necessary for the base bot - Guice
+
         ApiContextInitializer.init();
-        // Create the TelegramBotsApi object to register your bots
         TelegramBotsApi botsApi = new TelegramBotsApi();
         try {
-            // Register your newly created AbilityBot
             LongPollingBot playNowBot = new PlayNowBot(telegramBotToken, telegramBotName, telegramAdminChatID);
             botsApi.registerBot(playNowBot);
         } catch (TelegramApiException e) {

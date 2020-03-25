@@ -34,10 +34,28 @@ public class SetOfCards {
         Collections.shuffle(cards);
     }
 
+    public int countGold(){
+        return (int) cards.stream().filter(card -> card == Card.GOLD).count();
+    }
+    public int countEmpty(){
+        return (int) cards.stream().filter(card -> card == Card.LEER).count();
+    }
+    public int countFire(){
+        return (int) cards.stream().filter(card -> card == Card.FEUERFALLE).count();
+    }
+
     public String print(){
         StringBuilder sb = new StringBuilder();
         for (Card cardi: cards) {
             sb.append(cardi.getEmoji());
+        }
+        return sb.toString();
+    }
+
+    public String printHidden(){
+        StringBuilder sb = new StringBuilder();
+        for (Card cardi: cards) {
+            sb.append(cardi.getClosed());
         }
         return sb.toString();
     }

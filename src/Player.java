@@ -1,7 +1,9 @@
 import org.telegram.abilitybots.api.sender.SilentSender;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.send.SendSticker;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +17,6 @@ public class Player {
     private boolean hasKey;
 
     private Game currentGame;
-    public SilentSender silent;
 
     public Player(long id, String name, Game game) {
         this.currentGame = game;
@@ -37,11 +38,8 @@ public class Player {
         this.role = role;
     }
 
-    public void setSilent(SilentSender silent) {
-        this.silent = silent;
-    }
-
     public void setName(String name) {
+        currentGame.sendMarkdown("*" + name+ "* ist der neue Name von " + this.name);
         say("Dein Name wurde zu *"+name+"* geändert.");
         this.name = name;
     }
@@ -83,16 +81,26 @@ public class Player {
         sendMessagerequest.setChatId(this.getId());
         sendMessagerequest.enableMarkdown(true);
         sendMessagerequest.setText(message);
-        silent.execute(sendMessagerequest);
+        currentGame.silent.execute(sendMessagerequest);
     }
 
-    public Player letChoose(List<Player> selection) {
+    public void sendSticker(String stickerId) {
+        SendSticker sendSticker = new SendSticker();
+        sendSticker.setChatId(getId());
+        sendSticker.setSticker(stickerId);
+        try {
+            currentGame.playNowBot.execute(sendSticker);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void letChoose(List<Player> selection) {
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(currentGame.getId());
         sendMessage.setText("Jetzt ist " + name + " dran. Bei wem willst du eine Türe öffnen?");
         sendMessage.setReplyMarkup(getKeyboard(selection));
         currentGame.silent.execute(sendMessage);
-        return selection.get(0);
     }
 
     private InlineKeyboardMarkup getKeyboard(List<Player> players) {
@@ -101,7 +109,11 @@ public class Player {
         List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
         for (Player player : players) {
             List<InlineKeyboardButton> rowInline = new ArrayList<>();
-            rowInline.add(new InlineKeyboardButton().setText(player.getName()).setCallbackData("player:" + player.getId()));
+            String key = "";
+            if (player.hasKey)
+                key = PlayNowBot.texturePack.key();
+            rowInline.add(new InlineKeyboardButton().setText(key + player.getName()).setCallbackData("player:" + player.getId()));
+            rowInline.add(new InlineKeyboardButton().setText(player.getCards().printHidden()).setCallbackData("player:" + player.getId()));
             rowsInline.add(rowInline);
         }
         markupInline.setKeyboard(rowsInline);

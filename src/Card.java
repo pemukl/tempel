@@ -15,6 +15,10 @@ public enum Card {
         return "no emoji found";
     }
 
+    public String getClosed(){
+        return PlayNowBot.texturePack.closed();
+    }
+
     @Override
     public String toString() {
         if (this == FEUERFALLE)
