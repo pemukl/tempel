@@ -113,7 +113,10 @@ public class Player {
             if (player.hasKey)
                 key = PlayNowBot.texturePack.key();
             rowInline.add(new InlineKeyboardButton().setText(key + player.getName()).setCallbackData("player:" + player.getId()));
-            rowInline.add(new InlineKeyboardButton().setText(player.getCards().printHidden()).setCallbackData("player:" + player.getId()));
+            for (String str: player.getCards().getHidden() ) {
+                rowInline.add(new InlineKeyboardButton().setText(str).setCallbackData("player:" + player.getId()));
+
+            }
             rowsInline.add(rowInline);
         }
         markupInline.setKeyboard(rowsInline);

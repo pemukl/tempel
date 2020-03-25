@@ -135,7 +135,7 @@ public class Game {
 
         StringBuilder string = new StringBuilder();
 
-        string.append("\r\nRunde "+round +"/4. Bereits aufgedeckt:\r\n");
+        string.append("\r\nRunde "+(6-round) +"/4. Bereits aufgedeckt:\r\n");
         string.append(exposedCards.print()+"\r\n");
         string.append("*Gold: ").append(exposedCards.countGold()).append("*/").append(numGold).append("\r\n");
         string.append("*Feuerfallen: ").append(exposedCards.countFire()).append("*/").append(numFeuerfallen).append("\r\n");

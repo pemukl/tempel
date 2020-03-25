@@ -59,6 +59,13 @@ public class SetOfCards {
         }
         return sb.toString();
     }
+    public String[] getHidden(){
+        String[] array = new String[cards.size()];
+        for (int i = 0; i < array.length; i++) {
+            array[i] = cards.get(i).getClosed();
+        }
+        return array;
+    }
 
     @Override
     public String toString() {
