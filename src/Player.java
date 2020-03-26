@@ -1,6 +1,7 @@
 import org.telegram.abilitybots.api.sender.SilentSender;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendSticker;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -15,15 +16,21 @@ public class Player {
     private Role role;
     private SetOfCards cards;
     private boolean hasKey;
+    private String userName;
+
+    private int welcomeMessageId;
 
     private Game currentGame;
 
-    public Player(long id, String name, Game game) {
+    public Player(long id, String userName, Game game) {
         this.currentGame = game;
         this.id = id;
-        this.name = name;
+        this.userName = userName;
+        if(userName==null)
+            this.userName="Unnamed";
         this.cards = new SetOfCards();
         this.hasKey = false;
+        this.welcomeMessageId = welcomeMessageId;
     }
 
     public void setCards(SetOfCards cards) {
@@ -39,8 +46,7 @@ public class Player {
     }
 
     public void setName(String name) {
-        currentGame.sendMarkdown("*" + name+ "* ist der neue Name von " + this.name);
-        say("Dein Name wurde zu *"+name+"* geändert.");
+        EditMessageText toEdit = new EditMessageText();
         this.name = name;
     }
 
@@ -58,7 +64,7 @@ public class Player {
 
     public String getName() {
         if (name == null) {
-            return "no username";
+            return userName;
         }
         return this.name;
     }
@@ -95,12 +101,9 @@ public class Player {
         }
     }
 
-    public void letChoose(List<Player> selection) {
-        SendMessage sendMessage = new SendMessage();
-        sendMessage.setChatId(currentGame.getId());
-        sendMessage.setText("Jetzt ist " + name + " dran. Bei wem willst du eine Türe öffnen?");
-        sendMessage.setReplyMarkup(getKeyboard(selection));
-        currentGame.silent.execute(sendMessage);
+    public void letChoose(List<Player> selection, MyMessage myMessage) {
+        myMessage.setReplyMarkup(getKeyboard(selection));
+        myMessage.send();
     }
 
     private InlineKeyboardMarkup getKeyboard(List<Player> players) {
@@ -108,16 +111,21 @@ public class Player {
         InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
         for (Player player : players) {
-            List<InlineKeyboardButton> rowInline = new ArrayList<>();
+            List<InlineKeyboardButton> rowInline1 = new ArrayList<>();
             String key = "";
             if (player.hasKey)
                 key = PlayNowBot.texturePack.key();
-            rowInline.add(new InlineKeyboardButton().setText(key + player.getName()).setCallbackData("player:" + player.getId()));
-            for (String str: player.getCards().getHidden() ) {
-                rowInline.add(new InlineKeyboardButton().setText(str).setCallbackData("player:" + player.getId()));
+            rowInline1.add(new InlineKeyboardButton().setText(key + player.getName() + key).setCallbackData(player.getId()+";-1"));
 
+            List<InlineKeyboardButton> rowInline2 = new ArrayList<>();
+            String[] hiddencards =player.getCards().getHiddenStrings();
+            for (int i = 0; i < hiddencards.length; i++) {
+                String str = hiddencards[i];
+                rowInline2.add(new InlineKeyboardButton().setText(str).setCallbackData(player.getId()+";"+i));
             }
-            rowsInline.add(rowInline);
+
+            rowsInline.add(rowInline1);
+            rowsInline.add(rowInline2);
         }
         markupInline.setKeyboard(rowsInline);
         return markupInline;

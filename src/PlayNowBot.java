@@ -3,6 +3,7 @@ import org.telegram.abilitybots.api.objects.Ability;
 import org.telegram.abilitybots.api.objects.Flag;
 import org.telegram.abilitybots.api.objects.Reply;
 import org.telegram.abilitybots.api.objects.ReplyFlow;
+import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendSticker;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
@@ -38,7 +39,7 @@ public class PlayNowBot extends AbilityBot {
     public static final String BOT_USERNAME = "PlayNowBot";
     public List<Game> games = new ArrayList<>();
 
-    public static final EmojiSet texturePack = EmojiSet.NEAT;
+    public static final EmojiSet texturePack = EmojiSet.CORONA;
 
 
     public PlayNowBot() {
@@ -61,7 +62,40 @@ public class PlayNowBot extends AbilityBot {
                     SendMessage sendMessagerequest = new SendMessage();
                     sendMessagerequest.setChatId(ctx.chatId());
                     sendMessagerequest.enableMarkdown(true);
-                    sendMessagerequest.setText("*Hello* _world_ ! \u26BD");
+                    //sendMessagerequest.setReplyMarkup(new ForceReplyKeyboard());
+                    String arg = "";
+                    if(ctx.arguments().length>0){
+                        arg = ctx.firstArg();
+                    }
+                    sendMessagerequest.setText("*Hello* _world_ ! "+arg);
+                    System.out.println("I greeted "+ctx.user().getId()+" in chat "+ctx.chatId()+"!");
+                    silent.execute(sendMessagerequest);
+                })
+                .build();
+    }
+
+    public Ability translateUni() {
+        return Ability
+                .builder()
+                .name("uni")
+                .info("translates to Unicode! ")
+                .locality(ALL)
+                .privacy(PUBLIC)
+                .action(ctx -> {
+                    SendMessage sendMessagerequest = new SendMessage();
+                    sendMessagerequest.setChatId(ctx.chatId());
+                    sendMessagerequest.enableMarkdown(true);
+
+                    String str = ctx.firstArg().split(" ")[0];
+                    str = str.replace("\\","");
+                    String[] arr = str.split("u");
+                    String text = "";
+                    for(int i = 1; i < arr.length; i++){
+                        int hexVal = Integer.parseInt(arr[i], 16);
+                        text += (char)hexVal;
+                    }
+
+                    sendMessagerequest.setText("Translated: "+text);
                     System.out.println("I greeted "+ctx.user().getId()+" in chat "+ctx.chatId()+"!");
                     silent.execute(sendMessagerequest);
                 })
@@ -75,19 +109,46 @@ public class PlayNowBot extends AbilityBot {
             Player player = getPlayer(pusher);
             long chatId = query.getMessage().getChatId();
             Game game = getGame(chatId);
-            long chosenId = Long.parseLong(query.getData().split("player:")[1]);
+            String[] data = query.getData().split(";");
+            long chosenId = Long.parseLong(data[0]);
+            int cardIndex = Integer.parseInt(data[1]);
             Player chosenOne = getPlayer(chosenId);
-            if (game.getActivePlayer().getId() == player.getId()) {
-                if(chosenOne==player){
-                    player.say("Du kannst Dich nicht selbst auswählen.");
-                } else if(chosenOne.getCards().isEmpty()){
-                    player.say("Du kannst " + chosenOne.getName() + " nicht auswählen weil er keine Karten mehr hat.");
-                } else {
-                    game.nextMove(chosenOne);
-                }
-            } else {
-                player.say("Du kannst " + chosenOne.getName() + " nicht auswählen weil Du nicht am Zug bist.");
+
+            AnswerCallbackQuery reply = new AnswerCallbackQuery();
+            reply.setCallbackQueryId(query.getId());
+
+
+            if(chosenOne.getCards().isEmpty()){
+                reply.setText(chosenOne.getName() + " hat keine Karten mehr.");
             }
+            if (chosenOne.getCards().isExposed(cardIndex)){
+                reply.setText("Diese Karte wurde schon geöffnet.");
+            }
+            if (game.getActivePlayer().getId() != player.getId()) {
+                reply.setText("Du bist nicht am Zug.");
+            }
+            if(chosenOne==player){
+                if (cardIndex==-1) {
+                    reply.setShowAlert(true);
+                    reply.setText("Deine Rolle:" + player.getRole().getEmoji());
+                } else {
+                    reply.setShowAlert(true);
+                    reply.setText("Deine Karten:\r\n" + player.getCards().getHidden().printSort());
+                }
+            }
+
+            try {
+                this.execute(reply);
+                System.out.println(reply.getText());
+            } catch (TelegramApiException e) {
+                System.err.println(e.getMessage());
+                e.printStackTrace();
+            }
+            if (reply.getText()==null) {
+                Message message = upd.getCallbackQuery().getMessage();
+                game.nextMove(chosenOne, cardIndex, message);
+            }
+
         };
 
         return Reply.of(action, Flag.CALLBACK_QUERY);
@@ -109,7 +170,7 @@ public class PlayNowBot extends AbilityBot {
                 .name("startgame")
                 .info("Start a Game.")
                 .locality(GROUP)
-                .privacy(ADMIN)
+                .privacy(PUBLIC)
                 .action(ctx -> {
                             SendMessage sendMessagerequest = new SendMessage();
                             long id = ctx.chatId();
@@ -135,7 +196,6 @@ public class PlayNowBot extends AbilityBot {
                             sendMessagerequest.setChatId(ctx.chatId().toString());
                             Game game = getGame(Long.parseLong(ctx.firstArg()));
                             silent.execute(sendMessagerequest);
-
                             Player player = new Player(ctx.chatId(),ctx.user().getUserName(), game);
                             player.say("Du möchtest dem Spiel " + game.getName() + " beitreten.");
                             game.addPlayer(player);
@@ -169,7 +229,7 @@ public class PlayNowBot extends AbilityBot {
                 .name("invite")
                 .info("Invites Players to a Game.")
                 .locality(GROUP)
-                .privacy(ADMIN)
+                .privacy(PUBLIC)
                 .action(ctx -> {
                             if (getGame(ctx.chatId()) == null) {
                                 Game game = new Game(ctx.chatId(), this);

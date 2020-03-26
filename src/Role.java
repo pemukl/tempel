@@ -18,9 +18,9 @@ public enum Role {
     public String getStickerID(){
         switch (this){
             case ABENTEURER:
-                return "CAACAgIAAxkBAAIODV57YBlg3HdFI7BDXf1vkXM8n5fqAAIgAAOWn4wOrP1BM_Sqb_kYBA";
+                return PlayNowBot.texturePack.stickerAdventurer();
             case WAECHTERIN:
-                return "CAACAgIAAxkBAAINUV57S2xDYExq74na24Sy4u4FeYi_AAKmAAP3AsgPqwzk86kqxlgYBA";
+                return PlayNowBot.texturePack.stickerGuard();
         }
         return null;
     }

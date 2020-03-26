@@ -1,8 +1,12 @@
 import org.telegram.abilitybots.api.sender.SilentSender;
+import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.send.SendSticker;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.*;
 
@@ -87,7 +91,6 @@ public class Game {
         for (Player player : players) {
             string.append(player.getName()).append("\r\n");
         }
-        silent.send("Das Spiel kann beginnen. Folgende Spieler spielen mit:\r\n\r\n" + string.toString() + "\r\n" + activePlayer.getName() + " darf als erstes ziehen.", id);
         int numWaechterinnen;
         int numAbenteurer;
         Distribution distribution = Distribution.getDistribution(players.size());
@@ -103,6 +106,7 @@ public class Game {
         for (int x = 0; x < numWaechterinnen; x++) {
             roles.add(Role.WAECHTERIN);
         }
+        sendMarkdown(PlayNowBot.texturePack.adventurer()+":"+numAbenteurer+"   "+PlayNowBot.texturePack.guard() +":"+numWaechterinnen);
         Collections.shuffle(roles);
         for (Player player : players) {
             player.setRole(roles.remove(0));
@@ -110,57 +114,67 @@ public class Game {
             player.sendSticker(player.getRole().getStickerID());
         }
         distributeCards();
-        List<Player> selection = new ArrayList<>();
-        for (Player player : players) {
-            if (!player.getCards().isEmpty() && player != activePlayer)
-                selection.add(player);
-        }
-        activePlayer.letChoose(selection);
+        nextMove(activePlayer,-2,null);
     }
 
-    public void nextMove(Player nextPlayer) {
-        sendMarkdown("_" + activePlayer.getName() + "_ geht zu _" + nextPlayer.getName() + "_.");
+    public void nextMove(Player nextPlayer, int cardIndex, Message message) {
+        MyMessage messageBuilder;
+        if(message == null)
+            messageBuilder = new MyMessage(id, silent);
+        else
+            messageBuilder =new MyMessage(id,message.getMessageId(),playNowBot);
+
+
+        if (cardIndex!=-2) {
+            Card card;
+            if (cardIndex==-1){
+                card = nextPlayer.getCards().openRandom();
+            }else{
+                card = nextPlayer.getCards().open(cardIndex);
+            }
+            movesLeft--;
+            exposedCards.add(card);
+        }
+
         activePlayer.setHasKey(false);
         activePlayer = nextPlayer;
         activePlayer.setHasKey(true);
-        Card card = activePlayer.getCards().draw();
-        sendMarkdown("Es wurde aufgedeckt: "+card.getEmoji());
-        movesLeft--;
-        exposedCards.add(card);
 
-        StringBuilder sb = new StringBuilder();
-        sb.append("Du hast nun nur noch folgende Karten:\r\n\r\n");
-        sb.append(activePlayer.getCards().print());
-        activePlayer.say( sb.toString() );
-
-        StringBuilder string = new StringBuilder();
-
-        string.append("\r\nRunde "+(6-round) +"/4. Bereits aufgedeckt:\r\n");
-        string.append(exposedCards.print()+"\r\n");
-        string.append("*Gold: ").append(exposedCards.countGold()).append("*/").append(numGold).append("\r\n");
-        string.append("*Feuerfallen: ").append(exposedCards.countFire()).append("*/").append(numFeuerfallen).append("\r\n");
-        string.append("*Leer: ").append(exposedCards.countEmpty()).append("*/").append(numLeer).append("\r\n");
-        if (movesLeft == 0)
-            string.append("\r\n\r\nEs sind *keine* Züge mehr übrig.");
-        else
-            string.append("\r\n\r\nEs sind noch *").append(movesLeft).append("* Züge übrig.");
-        sendMarkdown( string.toString());
+        messageBuilder.append(PlayNowBot.texturePack.gold()+"*: "+exposedCards.countGold()+"*/"+numGold+"\r\n");
+        messageBuilder.append(PlayNowBot.texturePack.fire()+"*: "+exposedCards.countFire()+"*/"+numFeuerfallen+"\r\n\r\n");
+        //messageBuilder.append("*Leer: "+exposedCards.countEmpty()+"*/"+numLeer+"\r\n\r\n");
 
 
-        if (!isFinished() && round != 1) {
-            if (movesLeft == 0) {
-                round--;
-                if (round != 1)
-                    nextRound();
-                else {
-                    finished();
-                    return;
-                }
-            }
 
-            activePlayer.letChoose(players);
-        } else
+
+
+        if (isFinished()||(movesLeft==0&&round==2)) {
+            messageBuilder.send();
             finished();
+            return;
+        }
+
+        messageBuilder.append(exposedCards.print(players.size()));
+        if (movesLeft == 0) {
+            round--;
+            this.movesLeft = players.size();
+            distributeCards();
+        }
+        messageBuilder.append(""+printMovesLeft());
+        activePlayer.letChoose(players,messageBuilder);
+    }
+
+    private String printMovesLeft() {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < players.size(); i++) {
+            System.out.println("movesleft:"+movesLeft+" Players: " + players.size());
+            if (i<players.size()-movesLeft) {
+                //sb.append("\u26AA"); //uncovered
+            }else{
+                sb.append("\uD83D\uDD12"); //covered (yet to uncover)
+            }
+        }
+        return sb.toString();
     }
 
     private boolean isFinished() {
@@ -168,68 +182,51 @@ public class Game {
     }
 
     private void finished() {
-        List<String> winner = new ArrayList<>();
-        List<String> loser = new ArrayList<>();
+
+        StringBuilder string = new StringBuilder();
+        Role winnerParty;
         if (exposedCards.countGold() == numGold) {
-            for (Player player : players) {
-                if (player.getRole() == Role.ABENTEURER)
-                    winner.add(player.getName());
-                else
-                    loser.add(player.getName());
-            }
-            StringBuilder string = new StringBuilder();
-            string.append("Das ganze Gold wurde aufgedeckt!\r\n\r\nDie Gewinner sind:\r\n");
-            for (String s : winner) {
-                string.append(s).append("\r\n");
-            }
-            string.append("\r\nHerzlichen Glückwunsch!\r\n\r\n_____________________\r\n\r\nVerloren haben:\r\n");
-            for (String s : loser) {
-                string.append(s).append("\r\n");
-            }
-            string.append("\r\nVielleicht beim nächsten Mal. :(");
-            silent.send("Die Abenteurer haben gewonnen!\r\n" + string.toString(), id);
+
+            string.append("Die *Guten* gewinnen! Alle "+PlayNowBot.texturePack.gold()+" wurden gefunden.");
+            winnerParty = Role.ABENTEURER;
+
+        } else if(exposedCards.countFire() == numFeuerfallen){
+
+            string.append("Die *Bösen* gewinnen! Alle "+PlayNowBot.texturePack.fire()+" wurden aufgedeckt!");
+            winnerParty=Role.WAECHTERIN;
         } else {
-            for (Player player : players) {
-                if (player.getRole() == Role.WAECHTERIN)
-                    winner.add(player.getName());
-                else
-                    loser.add(player.getName());
-            }
-            if (numFeuerfallen == exposedCards.countFire()) {
-                StringBuilder string = new StringBuilder();
-                string.append("Alle Feuerfallen wurden aufgedeckt!\r\n\r\nDie Gewinner sind:\r\n");
-                appendWinner(winner, loser, string);
-            } else {
-                StringBuilder string = new StringBuilder();
-                string.append("Es wurde nicht das ganze Gold aufgedeckt!\r\n\r\nDie Gewinner sind:\r\n");
-                appendWinner(winner, loser, string);
-            }
+            string.append("Die *Bösen* gewinnen! Alle Züge sind aufgebraucht!");
+            winnerParty=Role.WAECHTERIN;
         }
+
+        List<Player> winners = new ArrayList<>();
+        List<Player> losers = new ArrayList<>();
+        for (Player player : players) {
+            if (player.getRole() == winnerParty)
+                winners.add(player);
+            else
+                losers.add(player);
+        }
+        string.append("\r\n\r\n");
+        string.append("----------\uD83C\uDFC6----------\r\n\r\n");
+        for (Player winner :winners ) {
+            string.append(winner.getRole().getEmoji() +" "+ winner.getName()+"\r\n");
+        }
+        string.append("\r\n");
+        string.append("----------\uD83D\uDC4E----------\r\n\r\n");
+        for (Player loser :losers ) {
+            string.append(loser.getRole().getEmoji() + " " +loser.getName()+"\r\n");
+        }
+        string.append("\r\n------------------------");
+
+        sendSticker(winnerParty.getStickerID());
+        sendMarkdown(string.toString());
         running = false;
         playNowBot.removeGame(this);
     }
 
-    private void appendWinner(List<String> winner, List<String> loser, StringBuilder string) {
-        for (String s : winner) {
-            string.append(s).append("\r\n");
-        }
-        string.append("\r\nHerzlichen Glückwunsch!\r\n\r\n_____________________\r\n\r\nVerloren haben:\r\n");
-        for (String s : loser) {
-            string.append(s).append("\r\n");
-        }
-        string.append("\r\nVielleicht beim nächsten Mal. :(");
-        silent.send("Die Wächterinnen haben gewonnen!\r\n" + string.toString(), id);
-    }
 
-    private void nextRound() {
-        silent.send("Eine neue Runde beginnt. Jeder Spieler bekommt neue Karten.", id);
-        distributeCards();
-        this.movesLeft = players.size();
-        for (Player player : players) {
-            if (player.isHasKey())
-                player.say("Du hast gerade den Schlüssel und darfst die nächste Runde starten.");
-        }
-    }
+
 
     private void distributeCards() {
         int goldLeft = numGold - exposedCards.countGold();
@@ -237,24 +234,22 @@ public class Game {
         int leerLeft = numLeer - exposedCards.countEmpty();
         SetOfCards cards = new SetOfCards();
         for (int x = 0; x < goldLeft; x++) {
-            cards.add(Card.GOLD);
+            cards.add(new Card(Card.Content.GOLD));
         }
         for (int x = 0; x < leerLeft; x++) {
-            cards.add(Card.LEER);
+            cards.add(new Card(Card.Content.LEER));
         }
         for (int x = 0; x < feuerfallenLeft; x++) {
-            cards.add(Card.FEUERFALLE);
+            cards.add(new Card(Card.Content.FEUERFALLE));
         }
         cards.shuffle();
         for (Player player : players) {
             SetOfCards cardsForPlayer = new SetOfCards();
             for (int y = 0; y < round; y++) {
-                cardsForPlayer.add(cards.draw());
+                cardsForPlayer.add(cards.removeRandom());
             }
             player.setCards(cardsForPlayer);
-            if (round != 5)
-                player.say("----------------- Neue Runde -----------------");
-            player.say("Das sind deine Karten für diese Runde:\r\n\r\n" + player.getCards().print());
+            player.say("Neue Runde. Das sind Deine Karten:\r\n" + player.getCards().printSort());
         }
     }
 
@@ -267,6 +262,17 @@ public class Game {
         sendMessagerequest.setText(message);
 
         silent.execute(sendMessagerequest);
+    }
+
+    public void sendSticker(String stickerId) {
+        SendSticker sendSticker = new SendSticker();
+        sendSticker.setChatId(getId());
+        sendSticker.setSticker(stickerId);
+        try {
+            playNowBot.execute(sendSticker);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
     }
 
 

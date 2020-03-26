@@ -1,10 +1,23 @@
-public enum Card {
-    LEER,
-    GOLD,
-    FEUERFALLE;
+public class Card {
+    public enum Content {
+        LEER,
+        GOLD,
+        FEUERFALLE;
+    }
+    public final Content state;
+    public boolean exposed;
+
+    public Card(Content state){
+        this.state = state;
+        this.exposed = false;
+    }
+
+    public void expose(){
+        this.exposed=true;
+    }
 
     public String getEmoji(){
-        switch (this){
+        switch (this.state){
             case FEUERFALLE:
                 return PlayNowBot.texturePack.fire();
             case GOLD:
@@ -15,15 +28,19 @@ public enum Card {
         return "no emoji found";
     }
 
-    public String getClosed(){
-        return PlayNowBot.texturePack.closed();
+    public String getHidden(){
+        if (exposed){
+            return this.getEmoji();
+        } else {
+            return PlayNowBot.texturePack.closed();
+        }
     }
 
     @Override
     public String toString() {
-        if (this == FEUERFALLE)
+        if (this.state == Content.FEUERFALLE)
             return "Feuerfalle";
-        else if (this == GOLD)
+        else if (this.state == Content.GOLD)
             return "Gold";
         else
             return "Leer";
