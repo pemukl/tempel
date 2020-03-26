@@ -5,22 +5,22 @@ public enum Role {
     ABENTEURER,
     WAECHTERIN;
 
-    public String getEmoji(){
+    public String getEmoji(Game game){
         switch (this){
             case ABENTEURER:
-                return PlayNowBot.texturePack.adventurer();
+                return game.texture.adventurer();
             case WAECHTERIN:
-                return PlayNowBot.texturePack.guard();
+                return game.texture.guard();
         }
         return "no emoji found";
     }
 
-    public String getStickerID(){
+    public String getStickerID(Game game){
         switch (this){
             case ABENTEURER:
-                return PlayNowBot.texturePack.stickerAdventurer();
+                return game.texture.stickerAdventurer();
             case WAECHTERIN:
-                return PlayNowBot.texturePack.stickerGuard();
+                return game.texture.stickerGuard();
         }
         return null;
     }

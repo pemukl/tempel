@@ -17,6 +17,7 @@ public class Player {
     private SetOfCards cards;
     private boolean hasKey;
     private String userName;
+    public boolean knowsHisCards;
 
     private int welcomeMessageId;
 
@@ -27,7 +28,7 @@ public class Player {
         this.id = id;
         this.userName = userName;
         if(userName==null)
-            this.userName="Unnamed";
+            //this.userName="Unnamed";
         this.cards = new SetOfCards();
         this.hasKey = false;
         this.welcomeMessageId = welcomeMessageId;
@@ -72,6 +73,9 @@ public class Player {
     public long getId() {
         return id;
     }
+    public Game getGame(){
+        return currentGame;
+    }
 
     static public List<String> playersToStrings(List<Player> players) {
         List<String> array = new ArrayList<>();
@@ -87,7 +91,11 @@ public class Player {
         sendMessagerequest.setChatId(this.getId());
         sendMessagerequest.enableMarkdown(true);
         sendMessagerequest.setText(message);
-        currentGame.silent.execute(sendMessagerequest);
+        try {
+            currentGame.silent.execute(sendMessagerequest);
+        } catch (Exception e) {
+            System.out.println("Caught Message exeption on user "+getName()+": "+e.getMessage());
+        }
     }
 
     public void sendSticker(String stickerId) {
@@ -96,10 +104,11 @@ public class Player {
         sendSticker.setSticker(stickerId);
         try {
             currentGame.playNowBot.execute(sendSticker);
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            System.out.println("Caught Sticker exeption on user "+getName()+": "+e.getMessage());
         }
     }
+
 
     public void letChoose(List<Player> selection, MyMessage myMessage) {
         myMessage.setReplyMarkup(getKeyboard(selection));
@@ -114,7 +123,7 @@ public class Player {
             List<InlineKeyboardButton> rowInline1 = new ArrayList<>();
             String key = "";
             if (player.hasKey)
-                key = PlayNowBot.texturePack.key();
+                key = currentGame.texture.key();
             rowInline1.add(new InlineKeyboardButton().setText(key + player.getName() + key).setCallbackData(player.getId()+";-1"));
 
             List<InlineKeyboardButton> rowInline2 = new ArrayList<>();

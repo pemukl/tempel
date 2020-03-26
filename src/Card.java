@@ -5,11 +5,13 @@ public class Card {
         FEUERFALLE;
     }
     public final Content state;
-    public boolean exposed;
+    private boolean exposed;
+    private Game game;
 
-    public Card(Content state){
+    public Card(Content state,Game game){
         this.state = state;
         this.exposed = false;
+        this.game = game;
     }
 
     public void expose(){
@@ -19,11 +21,11 @@ public class Card {
     public String getEmoji(){
         switch (this.state){
             case FEUERFALLE:
-                return PlayNowBot.texturePack.fire();
+                return game.texture.fire();
             case GOLD:
-                return PlayNowBot.texturePack.gold();
+                return game.texture.gold();
             case LEER:
-                return PlayNowBot.texturePack.empty();
+                return game.texture.empty();
         }
         return "no emoji found";
     }
@@ -32,8 +34,12 @@ public class Card {
         if (exposed){
             return this.getEmoji();
         } else {
-            return PlayNowBot.texturePack.closed();
+            return game.texture.closed();
         }
+    }
+
+    public boolean isExposed(){
+        return exposed;
     }
 
     @Override

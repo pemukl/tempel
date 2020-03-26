@@ -27,9 +27,12 @@ public class Game {
     private SetOfCards exposedCards;
     private Player activePlayer;
     private List<Player> players;
+    public EmojiSet texture;
 
 
-    public Game(long chatId, PlayNowBot playNowBot) {
+
+    public Game(long chatId, EmojiSet texture, PlayNowBot playNowBot) {
+        this.texture = texture;
         this.playNowBot = playNowBot;
         this.id = chatId;
         this.players = new ArrayList<>();
@@ -64,7 +67,6 @@ public class Game {
 
     public void addPlayer(Player player) {
         players.add(player);
-        silent.send("Spieler " + player.getName() + " ist dem Spiel beigetreten.", id);
     }
 
     public Player findPlayer(long id) {
@@ -76,11 +78,11 @@ public class Game {
 
     public void play() {
         if (players.size() < 2) {
-            silent.send("Es sind leider zu wenig Spieler drin. Bitte fügt noch weitere Spieler hinzu.", id);
+            silent.send("Es sind leider zu wenig Spieler in der Lobby. Bitte fügt noch weitere Spieler hinzu.", id);
             return;
         }
         if (players.size() > 10) {
-            silent.send("Es sind leider zu viele Spieler drin. Bitte erstellt mehrere Spiele.", id);
+            silent.send("Es sind leider zu viele Spieler in der Lobby. Bitte erstellt mehrere Spiele.", id);
             return;
         }
         running = true;
@@ -106,12 +108,12 @@ public class Game {
         for (int x = 0; x < numWaechterinnen; x++) {
             roles.add(Role.WAECHTERIN);
         }
-        sendMarkdown(PlayNowBot.texturePack.adventurer()+":"+numAbenteurer+"   "+PlayNowBot.texturePack.guard() +":"+numWaechterinnen);
+        sendMarkdown(texture.adventurer()+":"+numAbenteurer+"   "+texture.guard() +":"+numWaechterinnen);
         Collections.shuffle(roles);
         for (Player player : players) {
             player.setRole(roles.remove(0));
-            player.say("Deine Rolle ist " + player.getRole().getEmoji() + " !");
-            player.sendSticker(player.getRole().getStickerID());
+            player.say("Deine Rolle ist " + player.getRole().getEmoji(this) + " !");
+            player.sendSticker(player.getRole().getStickerID(this));
         }
         distributeCards();
         nextMove(activePlayer,-2,null);
@@ -122,7 +124,7 @@ public class Game {
         if(message == null)
             messageBuilder = new MyMessage(id, silent);
         else
-            messageBuilder =new MyMessage(id,message.getMessageId(),playNowBot);
+            messageBuilder =new MyMessage(message,playNowBot);
 
 
         if (cardIndex!=-2) {
@@ -140,8 +142,8 @@ public class Game {
         activePlayer = nextPlayer;
         activePlayer.setHasKey(true);
 
-        messageBuilder.append(PlayNowBot.texturePack.gold()+"*: "+exposedCards.countGold()+"*/"+numGold+"\r\n");
-        messageBuilder.append(PlayNowBot.texturePack.fire()+"*: "+exposedCards.countFire()+"*/"+numFeuerfallen+"\r\n\r\n");
+        messageBuilder.append(texture.gold()+"*: "+exposedCards.countGold()+"*/"+numGold+"\r\n");
+        messageBuilder.append(texture.fire()+"*: "+exposedCards.countFire()+"*/"+numFeuerfallen+"\r\n\r\n");
         //messageBuilder.append("*Leer: "+exposedCards.countEmpty()+"*/"+numLeer+"\r\n\r\n");
 
 
@@ -187,12 +189,12 @@ public class Game {
         Role winnerParty;
         if (exposedCards.countGold() == numGold) {
 
-            string.append("Die *Guten* gewinnen! Alle "+PlayNowBot.texturePack.gold()+" wurden gefunden.");
+            string.append("Die *Guten* gewinnen! Alle "+texture.gold()+" wurden gefunden.");
             winnerParty = Role.ABENTEURER;
 
         } else if(exposedCards.countFire() == numFeuerfallen){
 
-            string.append("Die *Bösen* gewinnen! Alle "+PlayNowBot.texturePack.fire()+" wurden aufgedeckt!");
+            string.append("Die *Bösen* gewinnen! Alle "+texture.fire()+" wurden aufgedeckt!");
             winnerParty=Role.WAECHTERIN;
         } else {
             string.append("Die *Bösen* gewinnen! Alle Züge sind aufgebraucht!");
@@ -210,16 +212,16 @@ public class Game {
         string.append("\r\n\r\n");
         string.append("----------\uD83C\uDFC6----------\r\n\r\n");
         for (Player winner :winners ) {
-            string.append(winner.getRole().getEmoji() +" "+ winner.getName()+"\r\n");
+            string.append(winner.getRole().getEmoji(this) +" "+ winner.getName()+"\r\n");
         }
         string.append("\r\n");
         string.append("----------\uD83D\uDC4E----------\r\n\r\n");
         for (Player loser :losers ) {
-            string.append(loser.getRole().getEmoji() + " " +loser.getName()+"\r\n");
+            string.append(loser.getRole().getEmoji(this) + " " +loser.getName()+"\r\n");
         }
         string.append("\r\n------------------------");
 
-        sendSticker(winnerParty.getStickerID());
+        sendSticker(winnerParty.getStickerID(this));
         sendMarkdown(string.toString());
         running = false;
         playNowBot.removeGame(this);
@@ -234,13 +236,13 @@ public class Game {
         int leerLeft = numLeer - exposedCards.countEmpty();
         SetOfCards cards = new SetOfCards();
         for (int x = 0; x < goldLeft; x++) {
-            cards.add(new Card(Card.Content.GOLD));
+            cards.add(new Card(Card.Content.GOLD,this));
         }
         for (int x = 0; x < leerLeft; x++) {
-            cards.add(new Card(Card.Content.LEER));
+            cards.add(new Card(Card.Content.LEER,this));
         }
         for (int x = 0; x < feuerfallenLeft; x++) {
-            cards.add(new Card(Card.Content.FEUERFALLE));
+            cards.add(new Card(Card.Content.FEUERFALLE,this));
         }
         cards.shuffle();
         for (Player player : players) {
@@ -249,7 +251,8 @@ public class Game {
                 cardsForPlayer.add(cards.removeRandom());
             }
             player.setCards(cardsForPlayer);
-            player.say("Neue Runde. Das sind Deine Karten:\r\n" + player.getCards().printSort());
+            //player.say("Neue Runde. Das sind Deine Karten:\r\n" + player.getCards().printSort());
+            player.knowsHisCards=false;
         }
     }
 
@@ -275,5 +278,37 @@ public class Game {
         }
     }
 
+
+    public String printPlayers() {
+        StringBuilder sb = new StringBuilder();
+        for (Player player:players) {
+            sb.append(player.getName()+"\r\n");
+        }
+        return sb.toString();
+    }
+
+    public InlineKeyboardMarkup getJoinKeyboard() {
+        List<InlineKeyboardButton> rowInline = new ArrayList<>();
+        rowInline.add(new InlineKeyboardButton().setText("Bin dabei!").setCallbackData("joinrequest"));
+        int numPlayers = this.players.size();
+        if(numPlayers>2 && numPlayers <11)
+            rowInline.add(new InlineKeyboardButton().setText("Spiel starten!").setCallbackData("startgame"));
+
+        List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
+        rowsInline.add(rowInline);
+
+        ReplyKeyboard replyKeyboard = new InlineKeyboardMarkup();
+        InlineKeyboardMarkup inlineKeyboardMarkup = ((InlineKeyboardMarkup) replyKeyboard);
+        inlineKeyboardMarkup.setKeyboard(rowsInline);
+        return inlineKeyboardMarkup;
+    }
+
+
+    public void removeplayer(Integer idToRemove) {
+        for (int i = 0; i < players.size(); i++) {
+            if(players.get(i).getId() == idToRemove)
+                players.remove(players.get(i));
+        }
+    }
 
 }

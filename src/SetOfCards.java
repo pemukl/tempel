@@ -29,7 +29,7 @@ public class SetOfCards {
     public boolean isExposed(int index){
         if (index==-1)
             return false;
-        return cards.get(index).exposed;
+        return cards.get(index).isExposed();
     }
 
     public Card open(int index){
@@ -41,7 +41,7 @@ public class SetOfCards {
     public SetOfCards getHidden(){
         ArrayList cards = new ArrayList();
         for (Card cardi:this.cards) {
-            if (!cardi.exposed)
+            if (!cardi.isExposed())
                 cards.add(cardi);
         }
         return new SetOfCards(cards);
@@ -104,14 +104,17 @@ public class SetOfCards {
 
     public String printSort(){
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < this.countGold(); i++) {
-            sb.append(PlayNowBot.texturePack.gold());
-        }
-        for (int i = 0; i < this.countEmpty(); i++) {
-            sb.append(PlayNowBot.texturePack.empty());
-        }
-        for (int i = 0; i < this.countFire(); i++) {
-            sb.append(PlayNowBot.texturePack.fire());
+        sb.append(printType(Card.Content.GOLD));
+        sb.append(printType(Card.Content.LEER));
+        sb.append(printType(Card.Content.FEUERFALLE));
+        return sb.toString();
+    }
+
+    private String printType(Card.Content cont){
+        StringBuilder sb = new StringBuilder();
+        for (Card card : cards) {
+            if (card.state == cont)
+                sb.append(card.getEmoji());
         }
         return sb.toString();
     }

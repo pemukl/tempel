@@ -1,9 +1,14 @@
 import org.telegram.abilitybots.api.sender.SilentSender;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class MyMessage {
     private String text;
@@ -14,16 +19,15 @@ public class MyMessage {
     private InlineKeyboardMarkup keyboard;
 
     public MyMessage(long chatId, SilentSender silent){
-        System.out.println("New MyMessage.");
         this.silent = silent;
         this.chatId = chatId;
         this.text = "";
     }
 
-    public MyMessage(long chatId, int messageId, PlayNowBot bot){
-        this.messageId = messageId;
+    public MyMessage(Message message, PlayNowBot bot){
+        this.messageId = message.getMessageId();
         this.bot = bot;
-        this.chatId = chatId;
+        this.chatId = message.getChatId();
         this.text = "";
     }
 
@@ -67,4 +71,6 @@ public class MyMessage {
             }
         }
     }
+
+
 }
