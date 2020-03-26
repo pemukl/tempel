@@ -147,12 +147,19 @@ public class PlayNowBot extends AbilityBot {
 
 
         if(chosenOne.getCards().isEmpty()){
+            reply.setShowAlert(false);
             reply.setText(chosenOne.getName() + " hat keine Karten mehr.");
         }
+        if(!chosenOne.knowsHisCards){
+            reply.setShowAlert(true);
+            reply.setText("Dieser Spieler kennt Seine Karten noch nicht.");
+        }
         if (chosenOne.getCards().isExposed(cardIndex)){
+            reply.setShowAlert(false);
             reply.setText("Diese Karte wurde schon geöffnet.");
         }
         if (game.getActivePlayer().getId() != player.getId()) {
+            reply.setShowAlert(false);
             reply.setText("Du bist nicht am Zug.");
         }
         if(chosenOne==player){
@@ -163,6 +170,7 @@ public class PlayNowBot extends AbilityBot {
                 reply.setShowAlert(true);
                 reply.setText("Deine Karten:\r\n" + player.getCards().getHidden().printSort());
                 player.knowsHisCards = true;
+                game.printStatsWithKeyboard(query.getMessage());
             }
         }
 

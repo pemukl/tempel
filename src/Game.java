@@ -89,6 +89,7 @@ public class Game {
         this.movesLeft = players.size();
         Collections.shuffle(players);
         this.activePlayer = players.get(0);
+        this.activePlayer.setHasKey(true);
         StringBuilder string = new StringBuilder();
         for (Player player : players) {
             string.append(player.getName()).append("\r\n");
@@ -116,16 +117,10 @@ public class Game {
             player.sendSticker(player.getRole().getStickerID(this));
         }
         distributeCards();
-        nextMove(activePlayer,-2,null);
+        printStatsWithKeyboard(null);
     }
 
     public void nextMove(Player nextPlayer, int cardIndex, Message message) {
-        MyMessage messageBuilder;
-        if(message == null)
-            messageBuilder = new MyMessage(id, silent);
-        else
-            messageBuilder =new MyMessage(message,playNowBot);
-
 
         if (cardIndex!=-2) {
             Card card;
@@ -142,29 +137,59 @@ public class Game {
         activePlayer = nextPlayer;
         activePlayer.setHasKey(true);
 
-        messageBuilder.append(texture.gold()+"*: "+exposedCards.countGold()+"*/"+numGold+"\r\n");
-        messageBuilder.append(texture.fire()+"*: "+exposedCards.countFire()+"*/"+numFeuerfallen+"\r\n\r\n");
-        //messageBuilder.append("*Leer: "+exposedCards.countEmpty()+"*/"+numLeer+"\r\n\r\n");
-
-
-
 
 
         if (isFinished()||(movesLeft==0&&round==2)) {
-            messageBuilder.send();
+            MyMessage mb = transformToMyMessage(message);
+            addStats(mb);
+            mb.send();
             finished();
             return;
         }
 
-        messageBuilder.append(exposedCards.print(players.size()));
         if (movesLeft == 0) {
             round--;
             this.movesLeft = players.size();
             distributeCards();
         }
-        messageBuilder.append(""+printMovesLeft());
-        activePlayer.letChoose(players,messageBuilder);
+
+        printStatsWithKeyboard(message);
     }
+
+    public void printStatsWithKeyboard(Message message){
+       MyMessage mb = transformToMyMessage(message);
+       addStats(mb);
+       addKeyboard(mb);
+       mb.send();
+    }
+
+    private MyMessage transformToMyMessage(Message message){
+        MyMessage messageBuilder;
+        if(message == null)
+            messageBuilder = new MyMessage(id, silent);
+        else
+            messageBuilder =new MyMessage(message,playNowBot);
+        return messageBuilder;
+    }
+
+    private MyMessage addStats(MyMessage messageBuilder){
+
+        messageBuilder.append(texture.gold()+"*: "+exposedCards.countGold()+"*/"+numGold+"\r\n");
+        messageBuilder.append(texture.fire()+"*: "+exposedCards.countFire()+"*/"+numFeuerfallen+"\r\n\r\n");
+        //messageBuilder.append("*Leer: "+exposedCards.countEmpty()+"*/"+numLeer+"\r\n\r\n");
+        messageBuilder.append(exposedCards.print(players.size()));
+
+        return messageBuilder;
+
+    }
+
+    private MyMessage addKeyboard(MyMessage messageBuilder){
+        messageBuilder.append(""+printMovesLeft());
+        activePlayer.addKeyboard(players,messageBuilder);
+        return messageBuilder;
+    }
+
+
 
     private String printMovesLeft() {
         StringBuilder sb = new StringBuilder();

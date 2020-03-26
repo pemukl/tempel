@@ -110,9 +110,9 @@ public class Player {
     }
 
 
-    public void letChoose(List<Player> selection, MyMessage myMessage) {
+    public MyMessage addKeyboard(List<Player> selection, MyMessage myMessage) {
         myMessage.setReplyMarkup(getKeyboard(selection));
-        myMessage.send();
+        return myMessage;
     }
 
     private InlineKeyboardMarkup getKeyboard(List<Player> players) {
@@ -128,9 +128,18 @@ public class Player {
 
             List<InlineKeyboardButton> rowInline2 = new ArrayList<>();
             String[] hiddencards =player.getCards().getHiddenStrings();
-            for (int i = 0; i < hiddencards.length; i++) {
-                String str = hiddencards[i];
-                rowInline2.add(new InlineKeyboardButton().setText(str).setCallbackData(player.getId()+";"+i));
+            if(player.knowsHisCards) {
+                for (int i = 0; i < hiddencards.length; i++) {
+                    String str = hiddencards[i];
+                    rowInline2.add(new InlineKeyboardButton().setText(str).setCallbackData(player.getId() + ";" + i));
+                }
+            } else {
+                if(player.hasKey)
+                    for (int i = 0; i < hiddencards.length; i++) {
+                        rowInline2.add(new InlineKeyboardButton().setText("\ud83d\udd0d").setCallbackData(player.getId() + ";" + i));
+                    }
+                else
+                    rowInline2.add(new InlineKeyboardButton().setText("\ud83d\udd0d").setCallbackData(player.getId() + ";" + 0));
             }
 
             rowsInline.add(rowInline1);
