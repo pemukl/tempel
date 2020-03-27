@@ -139,25 +139,26 @@ public class Game {
 
 
 
-        if (isFinished()||(movesLeft==0&&round==2)) {
-            MyMessage mb = transformToMyMessage(message);
-            addStats(mb);
-            mb.send();
-            finished();
-            return;
-        }
 
-        if (movesLeft == 0) {
+        if (movesLeft == 0||isFinished()) {
             printStatsWithKeyboard(message);
-
-            round--;
-            this.movesLeft = players.size();
-            distributeCards();
             try {
                 Thread.sleep(3000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+            if (round==2||isFinished()){
+                MyMessage mb = transformToMyMessage(message);
+                addStats(mb);
+                mb.send();
+                finished();
+                return;
+            }else{
+                round--;
+                this.movesLeft = players.size();
+                distributeCards();
+            }
+
         }
 
         printStatsWithKeyboard(message);

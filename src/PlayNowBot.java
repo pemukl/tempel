@@ -1,4 +1,3 @@
-import jdk.nashorn.internal.codegen.CompilerConstants;
 import org.telegram.abilitybots.api.bot.AbilityBot;
 import org.telegram.abilitybots.api.objects.*;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
