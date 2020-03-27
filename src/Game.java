@@ -148,9 +148,16 @@ public class Game {
         }
 
         if (movesLeft == 0) {
+            printStatsWithKeyboard(message);
+
             round--;
             this.movesLeft = players.size();
             distributeCards();
+            try {
+                Thread.sleep(3000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
 
         printStatsWithKeyboard(message);
