@@ -36,6 +36,7 @@ public class PlayNowBot extends AbilityBot {
     public static final String BOT_TOKEN = "1023104342:AAHxVpFvoGnEEzNPf41L_QFJD2cPtTIZB94";
     public static final String BOT_USERNAME = "PlayNowBot";
     public List<Game> games = new ArrayList<>();
+    private EmojiSet selectedTextur = EmojiSet.CORONA;
 
 
 
@@ -123,6 +124,11 @@ public class PlayNowBot extends AbilityBot {
             System.out.println("Received Query: "+query.getData());
             Game game = getGame(query.getMessage().getChatId());
             if(game.isRunning()) {
+                if (query.getData().equalsIgnoreCase("joinrequest")){
+
+                } else if(query.getData().equalsIgnoreCase("startgame")){
+
+                }
                 replyToGameQuery(query);
             }else{
                 replyToLobbyQuery(query);
@@ -141,50 +147,44 @@ public class PlayNowBot extends AbilityBot {
         int cardIndex = Integer.parseInt(data[1]);
         Player chosenOne = getPlayer(chosenId);
 
-        AnswerCallbackQuery reply = new AnswerCallbackQuery();
-        reply.setCallbackQueryId(query.getId());
-
+        String reply = null;
+        boolean alert =false;
 
         if(chosenOne.getCards().isEmpty()){
-            reply.setShowAlert(false);
-            reply.setText(chosenOne.getName() + " hat keine Karten mehr.");
+            alert = false;
+            reply = chosenOne.getName() + " hat keine Karten mehr.";
         }
         if(!chosenOne.knowsHisCards){
-            reply.setShowAlert(true);
-            reply.setText("Dieser Spieler kennt Seine Karten noch nicht.");
+            alert = true;
+            reply = "Dieser Spieler kennt Seine Karten noch nicht.";
         }
         if (chosenOne.getCards().isExposed(cardIndex)){
-            reply.setShowAlert(false);
-            reply.setText("Diese Karte wurde schon geöffnet.");
+            alert = false;
+            reply = "Diese Karte wurde schon geöffnet.";
         }
         if (game.getActivePlayer().getId() != player.getId()) {
-            reply.setShowAlert(false);
-            reply.setText("Du bist nicht am Zug.");
+            alert = false;
+            reply = "Du bist nicht am Zug.";
         }
         if(chosenOne==player){
             if (cardIndex==-1) {
-                reply.setShowAlert(true);
-                reply.setText("Deine Rolle:" + player.getRole().getEmoji(game));
+                alert = true;
+                reply = "Deine Rolle:" + player.getRole().getEmoji(game);
             } else {
-                reply.setShowAlert(true);
-                reply.setText("Deine Karten:\r\n" + player.getCards().getHidden().printSort());
+                alert = true;
+                reply = "Deine Karten:\r\n" + player.getCards().getHidden().printSort();
                 player.knowsHisCards = true;
                 game.printStatsWithKeyboard(query.getMessage());
             }
         }
 
-        try {
-            this.execute(reply);
-            System.out.println(reply.getText());
-        } catch (TelegramApiException e) {
-            System.err.println(e.getMessage());
-            e.printStackTrace();
-        }
-        if (reply.getText()==null) {
+
+        if (reply==null) {
             Message message = query.getMessage();
             game.nextMove(chosenOne, cardIndex, message);
+        }else{
+            replyToQuery(reply,query,alert);
         }
-
     }
     private void replyToLobbyQuery(CallbackQuery query) {
         long chatId = query.getMessage().getChatId();
@@ -196,15 +196,7 @@ public class PlayNowBot extends AbilityBot {
                 if (tojoin.getName()!=null) {
                     game.addPlayer(tojoin);
                 } else {
-                    AnswerCallbackQuery reply = new AnswerCallbackQuery();
-                    reply.setCallbackQueryId(query.getId());
-                    reply.setShowAlert(true);
-                    reply.setText("Du kannst leider nur Beitreten, indem Du mit Deinem Wunschnamen auf die Lobby antwortest.");
-                    try {
-                        this.execute(reply);
-                    } catch (TelegramApiException e) {
-                        System.err.println(e.getMessage());
-                    }
+                    replyToQuery("Du kannst leider nur Beitreten, indem Du mit Deinem Wunschnamen auf die Lobby antwortest.",query,true);
                 }
             } else {
                 game.removeplayer(user.getId());
@@ -212,10 +204,26 @@ public class PlayNowBot extends AbilityBot {
             MyMessage lobby = new MyMessage(query.getMessage(),this);
             updateLobby(lobby,game);
 
-        } else if(query.getData().equalsIgnoreCase("startgame")){
+            } else if(query.getData().equalsIgnoreCase("startgame")){
             game.play();
         } else {
             System.err.println("Unhandeled JoinQuery: "+query.getData());
+        }
+    }
+
+    private boolean isLobbyQuery(CallbackQuery query){
+        return query.getData().equalsIgnoreCase("joinrequest") || query.getData().equalsIgnoreCase("startgame");
+    }
+
+    private void replyToQuery(String message, CallbackQuery query, boolean alert){
+        AnswerCallbackQuery reply = new AnswerCallbackQuery();
+        reply.setCallbackQueryId(query.getId());
+        reply.setShowAlert(alert);
+        reply.setText(message);
+        try {
+            this.execute(reply);
+        } catch (TelegramApiException e) {
+            System.err.println(e.getMessage());
         }
     }
 
