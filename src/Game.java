@@ -1,20 +1,13 @@
 import org.telegram.abilitybots.api.sender.SilentSender;
-import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
+import org.telegram.telegrambots.meta.api.methods.send.SendAnimation;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendSticker;
 import org.telegram.telegrambots.meta.api.objects.Message;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.*;
 
 public class Game {
-
-    private int numGold;
-    private int numLeer;
-    private int numFeuerfallen;
 
     private boolean running;
 
@@ -28,6 +21,7 @@ public class Game {
     private Player activePlayer;
     private List<Player> players;
     public EmojiSet texture;
+    private Distribution distribution;
 
 
 
@@ -36,8 +30,6 @@ public class Game {
         this.playNowBot = playNowBot;
         this.id = chatId;
         this.players = new ArrayList<>();
-        this.exposedCards = new SetOfCards();
-        this.round = 5;
         this.running = false;
     }
 
@@ -53,12 +45,20 @@ public class Game {
         this.name = name;
     }
 
+    public void setTexture(EmojiSet texture){
+        this.texture = texture;
+    }
+
     public String getName() {
         return this.name;
     }
 
     public boolean isRunning() {
         return running;
+    }
+
+    public void interrupt(){
+        this.running = false;
     }
 
     public Player getActivePlayer() {
@@ -78,38 +78,34 @@ public class Game {
 
     public void play() {
         if (players.size() < 2) {
-            silent.send("Es sind leider zu wenig Spieler in der Lobby. Bitte fügt noch weitere Spieler hinzu.", id);
+            silent.send("Es sind leider zu wenig Spieler registriert. Bitte fügt noch weitere Spieler hinzu.", id);
             return;
         }
         if (players.size() > 10) {
-            silent.send("Es sind leider zu viele Spieler in der Lobby. Bitte erstellt mehrere Spiele.", id);
+            silent.send("Es sind leider zu viele Spieler registriert. Bitte erstellt mehrere Spiele.", id);
             return;
         }
+        System.out.println("Starting Game "+this.getName()+" with "+players.size()+" Players.\r\n");
         running = true;
+        this.round = 5;
+        this.exposedCards = new SetOfCards();
         this.movesLeft = players.size();
-        Collections.shuffle(players);
-        this.activePlayer = players.get(0);
-        this.activePlayer.setHasKey(true);
-        StringBuilder string = new StringBuilder();
-        for (Player player : players) {
-            string.append(player.getName()).append("\r\n");
+        for (Player player:players) {
+            player.setHasKey(false);
         }
-        int numWaechterinnen;
-        int numAbenteurer;
-        Distribution distribution = Distribution.getDistribution(players.size());
-        numAbenteurer = distribution.getAbenteurer();
-        numWaechterinnen = distribution.getWaechterinnen();
-        this.numGold = distribution.getGold();
-        this.numLeer = distribution.getLeer();
-        this.numFeuerfallen = distribution.getFeuerfallen();
+
+
+        if (this.activePlayer==null)
+            this.activePlayer = players.get(0);
+        this.activePlayer.setHasKey(true);
+        distribution = Distribution.getDistribution(players.size());
         List<Role> roles = new ArrayList<>();
-        for (int x = 0; x < numAbenteurer; x++) {
+        for (int x = 0; x < distribution.getAbenteurer(); x++) {
             roles.add(Role.ABENTEURER);
         }
-        for (int x = 0; x < numWaechterinnen; x++) {
+        for (int x = 0; x < distribution.getWaechterinnen(); x++) {
             roles.add(Role.WAECHTERIN);
         }
-        sendMarkdown(texture.adventurer()+":"+numAbenteurer+"   "+texture.guard() +":"+numWaechterinnen);
         Collections.shuffle(roles);
         for (Player player : players) {
             player.setRole(roles.remove(0));
@@ -143,7 +139,7 @@ public class Game {
         if (movesLeft == 0||isFinished()) {
             printStatsWithKeyboard(message);
             try {
-                Thread.sleep(3000);
+                Thread.sleep(2000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -164,68 +160,20 @@ public class Game {
         printStatsWithKeyboard(message);
     }
 
-    public void printStatsWithKeyboard(Message message){
-       MyMessage mb = transformToMyMessage(message);
-       addStats(mb);
-       addKeyboard(mb);
-       mb.send();
-    }
-
-    private MyMessage transformToMyMessage(Message message){
-        MyMessage messageBuilder;
-        if(message == null)
-            messageBuilder = new MyMessage(id, silent);
-        else
-            messageBuilder =new MyMessage(message,playNowBot);
-        return messageBuilder;
-    }
-
-    private MyMessage addStats(MyMessage messageBuilder){
-
-        messageBuilder.append(texture.gold()+"*: "+exposedCards.countGold()+"*/"+numGold+"\r\n");
-        messageBuilder.append(texture.fire()+"*: "+exposedCards.countFire()+"*/"+numFeuerfallen+"\r\n\r\n");
-        //messageBuilder.append("*Leer: "+exposedCards.countEmpty()+"*/"+numLeer+"\r\n\r\n");
-        messageBuilder.append(exposedCards.print(players.size()));
-
-        return messageBuilder;
-
-    }
-
-    private MyMessage addKeyboard(MyMessage messageBuilder){
-        messageBuilder.append(""+printMovesLeft());
-        activePlayer.addKeyboard(players,messageBuilder);
-        return messageBuilder;
-    }
-
-
-
-    private String printMovesLeft() {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < players.size(); i++) {
-            System.out.println("movesleft:"+movesLeft+" Players: " + players.size());
-            if (i<players.size()-movesLeft) {
-                //sb.append("\u26AA"); //uncovered
-            }else{
-                sb.append("\uD83D\uDD12"); //covered (yet to uncover)
-            }
-        }
-        return sb.toString();
-    }
-
     private boolean isFinished() {
-        return exposedCards.countGold() == numGold || exposedCards.countFire() == numFeuerfallen;
+        return exposedCards.countGold() == distribution.getGold() || exposedCards.countFire() == distribution.getFeuerfallen();
     }
 
     private void finished() {
 
         StringBuilder string = new StringBuilder();
         Role winnerParty;
-        if (exposedCards.countGold() == numGold) {
+        if (exposedCards.countGold() == distribution.getGold()) {
 
             string.append("Die *Guten* gewinnen! Alle "+texture.gold()+" wurden gefunden.");
             winnerParty = Role.ABENTEURER;
 
-        } else if(exposedCards.countFire() == numFeuerfallen){
+        } else if(exposedCards.countFire() == distribution.getFeuerfallen()){
 
             string.append("Die *Bösen* gewinnen! Alle "+texture.fire()+" wurden aufgedeckt!");
             winnerParty=Role.WAECHTERIN;
@@ -257,16 +205,17 @@ public class Game {
         sendSticker(winnerParty.getStickerID(this));
         sendMarkdown(string.toString());
         running = false;
-        playNowBot.removeGame(this);
+
+        playNowBot.updateLobby(new MyMessage(id,silent),this);
     }
 
 
 
 
     private void distributeCards() {
-        int goldLeft = numGold - exposedCards.countGold();
-        int feuerfallenLeft = numFeuerfallen - exposedCards.countFire();
-        int leerLeft = numLeer - exposedCards.countEmpty();
+        int goldLeft = distribution.getLeer() - exposedCards.countGold();
+        int feuerfallenLeft = distribution.getFeuerfallen() - exposedCards.countFire();
+        int leerLeft = distribution.getLeer() - exposedCards.countEmpty();
         SetOfCards cards = new SetOfCards();
         for (int x = 0; x < goldLeft; x++) {
             cards.add(new Card(Card.Content.GOLD,this));
@@ -289,6 +238,66 @@ public class Game {
         }
     }
 
+    public void printStatsWithKeyboard(Message message){
+       MyMessage mb = transformToMyMessage(message);
+       addStats(mb);
+       addKeyboard(mb);
+       mb.send();
+    }
+
+    private MyMessage transformToMyMessage(Message message){
+        MyMessage messageBuilder;
+        if(message == null)
+            messageBuilder = new MyMessage(id, silent);
+        else
+            messageBuilder =new MyMessage(message,playNowBot);
+        return messageBuilder;
+    }
+
+    private MyMessage addStats(MyMessage messageBuilder){
+        String minusOne = "";
+        if (distribution.getWaechterinnen()+distribution.getAbenteurer() > players.size())
+            minusOne = "(-1)";
+        messageBuilder.append(texture.adventurer()+":"+distribution.getAbenteurer()+minusOne
+                +"    "+texture.guard() +":"+distribution.getWaechterinnen()+ minusOne + "\r\n");
+
+
+        messageBuilder.append(texture.gold()+"*: "+exposedCards.countGold()+"*/"+distribution.getGold()+"\r\n");
+        messageBuilder.append(texture.fire()+"*: "+exposedCards.countFire()+"*/"+distribution.getFeuerfallen()+"\r\n");
+        messageBuilder.append(exposedCards.print(players.size()));
+
+        return messageBuilder;
+
+    }
+
+    private MyMessage addKeyboard(MyMessage messageBuilder){
+        messageBuilder.append(""+printMovesLeft());
+        activePlayer.addKeyboard(players,messageBuilder);
+        return messageBuilder;
+    }
+
+
+
+    private String printMovesLeft() {
+        StringBuilder sb = new StringBuilder();
+        int toGo;
+        if (players.size()==0)
+            toGo = 3;
+        else
+            toGo = players.size();
+
+        for (int i = 0; i < toGo; i++) {
+            if (i<players.size()-movesLeft) {
+                //sb.append("\u26AA"); //uncovered
+            }else{
+                sb.append("\uD83D\uDD12"); //covered (yet to uncover)
+            }
+        }
+        return sb.toString();
+    }
+
+
+
 
     public void sendMarkdown(String message) {
         SendMessage sendMessagerequest = new SendMessage();
@@ -300,40 +309,46 @@ public class Game {
         silent.execute(sendMessagerequest);
     }
 
-    public void sendSticker(String stickerId) {
-        SendSticker sendSticker = new SendSticker();
-        sendSticker.setChatId(getId());
-        sendSticker.setSticker(stickerId);
+    public void sendSticker(String id) {
+        sendSticker(id,this.getId());
+    }
+
+
+        public void sendSticker(String id,long chatId) {
+        SendSticker sticker = new SendSticker();
+        sticker.setChatId(chatId);
+        sticker.setSticker(id);
+        SendAnimation animation = new SendAnimation();
+        animation.setChatId(chatId);
+        animation.setAnimation(id);
         try {
-            playNowBot.execute(sendSticker);
+            playNowBot.execute(sticker);
         } catch (TelegramApiException e) {
             e.printStackTrace();
+            try {
+                playNowBot.execute(animation);
+            } catch (TelegramApiException er) {
+                er.printStackTrace();
+            }
         }
+
+
     }
 
 
     public String printPlayers() {
         StringBuilder sb = new StringBuilder();
         for (Player player:players) {
-            sb.append(player.getName()+"\r\n");
+            if(player.getUserName()==null)
+                sb.append("*"+player.getName()+"*\r\n");
+            else
+                sb.append("*"+player.getName()+"* (" + player.getUserName() + ")\r\n");
         }
         return sb.toString();
     }
 
-    public InlineKeyboardMarkup getJoinKeyboard() {
-        List<InlineKeyboardButton> rowInline = new ArrayList<>();
-        rowInline.add(new InlineKeyboardButton().setText("Bin dabei!").setCallbackData("joinrequest"));
-        int numPlayers = this.players.size();
-        if(numPlayers>2 && numPlayers <11)
-            rowInline.add(new InlineKeyboardButton().setText("Spiel starten!").setCallbackData("startgame"));
-
-        List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
-        rowsInline.add(rowInline);
-
-        ReplyKeyboard replyKeyboard = new InlineKeyboardMarkup();
-        InlineKeyboardMarkup inlineKeyboardMarkup = ((InlineKeyboardMarkup) replyKeyboard);
-        inlineKeyboardMarkup.setKeyboard(rowsInline);
-        return inlineKeyboardMarkup;
+    public int numPlayers(){
+        return players.size();
     }
 
 

@@ -1,13 +1,12 @@
+import org.omg.CORBA.Any;
 import org.telegram.abilitybots.api.bot.AbilityBot;
 import org.telegram.abilitybots.api.objects.*;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.methods.send.SendSticker;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ForceReplyKeyboard;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -15,7 +14,6 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -23,20 +21,17 @@ import java.util.function.Predicate;
 
 import static org.telegram.abilitybots.api.objects.Flag.MESSAGE;
 import static org.telegram.abilitybots.api.objects.Flag.REPLY;
-import static org.telegram.abilitybots.api.objects.Locality.ALL;
-import static org.telegram.abilitybots.api.objects.Locality.GROUP;
-import static org.telegram.abilitybots.api.objects.Locality.USER;
-import static org.telegram.abilitybots.api.objects.Privacy.ADMIN;
-import static org.telegram.abilitybots.api.objects.Privacy.PUBLIC;
-import static org.telegram.abilitybots.api.util.AbilityUtils.getChatId;
+import static org.telegram.abilitybots.api.objects.Locality.*;
+import static org.telegram.abilitybots.api.objects.Privacy.*;
 
 public class PlayNowBot extends AbilityBot {
     private long adminChatId;
 
-    public static final String BOT_TOKEN = "1023104342:AAHxVpFvoGnEEzNPf41L_QFJD2cPtTIZB94";
-    public static final String BOT_USERNAME = "PlayNowBot";
-    public List<Game> games = new ArrayList<>();
-    private EmojiSet selectedTextur = EmojiSet.CORONA;
+    private static final String BOT_TOKEN = "1023104342:AAHxVpFvoGnEEzNPf41L_QFJD2cPtTIZB94";
+    private static final String BOT_USERNAME = "PlayNowBot";
+
+    private List<Game> games = new ArrayList<>();
+    private EmojiSet selectedTexture = EmojiSet.CORONA;
 
 
 
@@ -49,87 +44,76 @@ public class PlayNowBot extends AbilityBot {
         this.adminChatId = adminChatId;
     }
 
-    public Ability sayHelloWorld() {
+    public Ability invite() {
         return Ability
                 .builder()
-                .name("hello")
-                .info("says hello world! ")
-                .locality(ALL)
-                .privacy(PUBLIC)
-                .action(ctx -> {
-                    SendMessage sendMessagerequest = new SendMessage();
-                    sendMessagerequest.setChatId(ctx.chatId());
-                    sendMessagerequest.enableMarkdown(true);
-                    //sendMessagerequest.setReplyMarkup(new ForceReplyKeyboard());
-                    String arg = "";
-                    if(ctx.arguments().length>0){
-                        arg = ctx.firstArg();
-                    }
-                    sendMessagerequest.setText("*Hello* _world_ ! "+arg);
-                    System.out.println("I greeted "+ctx.user().getId()+" in chat "+ctx.chatId()+"!");
-                    silent.execute(sendMessagerequest);
-                })
-                .build();
-    }
-
-    public Ability translateUni() {
-        return Ability
-                .builder()
-                .name("uni")
-                .info("translates to Unicode! ")
-                .locality(ALL)
-                .privacy(PUBLIC)
-                .action(ctx -> {
-                    SendMessage sendMessagerequest = new SendMessage();
-                    sendMessagerequest.setChatId(ctx.chatId());
-                    sendMessagerequest.enableMarkdown(true);
-
-                    String str = ctx.firstArg().split(" ")[0];
-                    str = str.replace("\\","");
-                    String[] arr = str.split("u");
-                    String text = "";
-                    for(int i = 1; i < arr.length; i++){
-                        int hexVal = Integer.parseInt(arr[i], 16);
-                        text += (char)hexVal;
-                    }
-
-                    sendMessagerequest.setText("Translated: "+text);
-                    System.out.println("I greeted "+ctx.user().getId()+" in chat "+ctx.chatId()+"!");
-                    silent.execute(sendMessagerequest);
-                })
-                .build();
-    }
-
-
-    public Ability resetGame() {
-        return Ability
-                .builder()
-                .name("reset")
-                .info("Resets the Bot in one chat.")
+                .name("invite")
+                .info("Invites Players to a Game.")
                 .locality(GROUP)
-                .privacy(ADMIN)
+                .privacy(PUBLIC)
                 .action(ctx -> {
-                            Game game = getGame(ctx.chatId());
-                            game.sendMarkdown("Spiel wurde zurückgesetzt.");
-                            removeGame(game);
+                        if (getGame(ctx.chatId()) == null) {
+                            setNewGame(ctx, null);
                         }
-                )
-                .build();
+                        Game game = getGame(ctx.chatId());
+                        if(!game.isRunning())
+                            inviteRoutine(ctx);
+                        }
+                ).build();
     }
+
+    private void inviteRoutine(MessageContext ctx){
+        Game game = getGame(ctx.chatId());
+        MyMessage sendMessagerequest = new MyMessage(ctx.chatId(),silent);
+        updateLobby(sendMessagerequest,game);
+    }
+
+    private void setNewGame(MessageContext ctx, String alternateName){
+        Game game = new Game(ctx.chatId(), selectedTexture, this);
+        game.setSilent(silent);
+        games.add(game);
+        if (ctx.arguments().length == 0) {
+            if(alternateName!=null)
+            game.setName(alternateName);
+            else
+                game.setName("Tempel des Schreckens");
+        } else {
+            game.setName(ctx.firstArg());
+        }
+    }
+
 
     public Reply replyToQuery() {
 
         Consumer<Update> action = upd -> {
             CallbackQuery query = upd.getCallbackQuery();
-            System.out.println("Received Query: "+query.getData());
             Game game = getGame(query.getMessage().getChatId());
-            if(game.isRunning()) {
-                if (query.getData().equalsIgnoreCase("joinrequest")){
+            String[] data = query.getData().split(":");
+            if(data[0].equalsIgnoreCase("texture")){
+                MyMessage message = new MyMessage(upd.getCallbackQuery().getMessage(), this);
+                for (EmojiSet set:EmojiSet.values()) {
+                    if(set.toString().equalsIgnoreCase(data[1]))
+                        if (upd.getCallbackQuery().getMessage().isUserMessage()) {
+                            this.selectedTexture = set;
+                            message.setText("Default-Aussehen geändert zu " + this.selectedTexture.toString());
 
-                } else if(query.getData().equalsIgnoreCase("startgame")){
-
+                        }else if(getGame(upd.getCallbackQuery().getMessage().getChatId()) != null) {
+                            game = getGame(upd.getCallbackQuery().getMessage().getChatId());
+                            game.setTexture(set);
+                            message.setText("Aussehen geändert zu " + game.texture.toString());
+                        }
                 }
-                replyToGameQuery(query);
+                System.out.println("Aussehen geändert zu "+this.selectedTexture.toString());
+
+                message.send();
+            }
+
+            if(game.isRunning()) {
+                if (isLobbyQuery(query)) {
+                    sendAlarm("There is a game running already.",query,false);
+                } else {
+                    replyToGameQuery(query);
+                }
             }else{
                 replyToLobbyQuery(query);
             }
@@ -183,12 +167,13 @@ public class PlayNowBot extends AbilityBot {
             Message message = query.getMessage();
             game.nextMove(chosenOne, cardIndex, message);
         }else{
-            replyToQuery(reply,query,alert);
+            sendAlarm(reply,query,alert);
         }
     }
     private void replyToLobbyQuery(CallbackQuery query) {
         long chatId = query.getMessage().getChatId();
         Game game = getGame(chatId);
+        MyMessage lobby = new MyMessage(query.getMessage(),this);
         if (query.getData().equalsIgnoreCase("joinrequest")){
             User user = query.getFrom();
             if(game.findPlayer(user.getId()) == null){
@@ -196,18 +181,27 @@ public class PlayNowBot extends AbilityBot {
                 if (tojoin.getName()!=null) {
                     game.addPlayer(tojoin);
                 } else {
-                    replyToQuery("Du kannst leider nur Beitreten, indem Du mit Deinem Wunschnamen auf die Lobby antwortest.",query,true);
+                    sendAlarm("Du kannst leider nur Beitreten, indem Du mit Deinem Wunschnamen auf die Lobby antwortest.",query,true);
                 }
             } else {
                 game.removeplayer(user.getId());
             }
-            MyMessage lobby = new MyMessage(query.getMessage(),this);
             updateLobby(lobby,game);
 
-            } else if(query.getData().equalsIgnoreCase("startgame")){
+        } else if(query.getData().equalsIgnoreCase("startgame")){
+            closeLobbyOnStart(lobby,game);
             game.play();
+        } else if(query.getData().equalsIgnoreCase("cancel")) {
+            if(game.findPlayer(query.getFrom().getId())!= null) {
+                removeGame(game);
+                MyMessage toremove = new MyMessage(query.getMessage(), this);
+                toremove.setText("Lobby geschlossen.");
+                toremove.send();
+            } else {
+                sendAlarm("You must be in the Lobby to close it.",query,true);
+            }
         } else {
-            System.err.println("Unhandeled JoinQuery: "+query.getData());
+            System.out.println("unhandeled Joinrequest: "+query.getData());
         }
     }
 
@@ -215,7 +209,7 @@ public class PlayNowBot extends AbilityBot {
         return query.getData().equalsIgnoreCase("joinrequest") || query.getData().equalsIgnoreCase("startgame");
     }
 
-    private void replyToQuery(String message, CallbackQuery query, boolean alert){
+    private void sendAlarm(String message, CallbackQuery query, boolean alert){
         AnswerCallbackQuery reply = new AnswerCallbackQuery();
         reply.setCallbackQueryId(query.getId());
         reply.setShowAlert(alert);
@@ -255,23 +249,65 @@ public class PlayNowBot extends AbilityBot {
         return Reply.of(action, MESSAGE, REPLY, isReplyToBot());
     }
 
-    public Reply replyToSticker() {
-        Consumer<Update> action = upd -> {
-            if (upd.getMessage().hasSticker()) {
-                System.out.println("Received Sticker: " + upd.getMessage().getSticker().getFileId());
-                silent.send(upd.getMessage().getSticker().getFileId(),upd.getMessage().getChatId());
-            }
-        };
-        return Reply.of(action, update -> update.getMessage().hasSticker());
+    public Ability setName() {
+        return Ability
+                .builder()
+                .name("name")
+                .info("Takes one argument to let you set your nickname.")
+                .locality(ALL)
+                .privacy(PUBLIC)
+                .action(ctx -> {
+                    MyMessage message = new MyMessage(ctx.user().getId(),silent);
+
+                    try{
+                        if(ctx.arguments().length >0) {
+                            Player.addName(ctx.firstArg(), ctx.user().getId());
+                            message.setText("Dein Name wurde zu *" + ctx.firstArg() + "* geändert.");
+                        }else{
+                            message.setText("Du Musst mir Deinen Namen als Argument übergeben, um ihn zu setzen. Also: /name [username]");
+                        }
+                    } catch (Exception e){
+                        System.out.println(e.getMessage());
+                    }
+
+                    message.send();
+
+                        }
+                )
+                .build();
+    }
+
+    public Ability startUser() {
+        return Ability
+                .builder()
+                .name("start")
+                .info("Method called when users open bot.")
+                .locality(USER)
+                .privacy(PUBLIC)
+                .action(ctx -> {
+                    MyMessage message = new MyMessage(ctx.chatId(),silent);
+                    String name = Player.getName(ctx.user().getId());
+                    if (name!=null)
+                        message.setText("Welcome back to the Playnowbot, "+name+"\r\n"
+                                +"to change your name just hit /name [nickname]\r\n"+
+                                "to let me moderate a game with your friends add me to a group and hit /invite.");
+                    else
+                        message.setText("Welcome to the Playnowbot.\r\n"
+                                +"to change your name just hit /name [nickname] \r\n" +
+                                "to let me moderate a game with your friends add me to a group and hit /invite.");
+                    message.send();
+                }
+                )
+                .build();
     }
 
     public Ability startGame() {
         return Ability
                 .builder()
                 .name("startgame")
-                .info("Start a Game.")
+                .info("(re-)starts a Game.")
                 .locality(GROUP)
-                .privacy(PUBLIC)
+                .privacy(ADMIN)
                 .action(ctx -> {
                             Objects.requireNonNull(getGame(ctx.chatId())).play();
                         }
@@ -279,72 +315,147 @@ public class PlayNowBot extends AbilityBot {
                 .build();
     }
 
-    public Ability startPlayer() {
-        String frage = "Wie willst Du heißen?";
+    public Ability resetGame() {
         return Ability
                 .builder()
-                .name("start")
-                .info("Logs you into a Game.")
-                .locality(USER)
-                .privacy(PUBLIC)
+                .name("reset")
+                .info("Resets the Bot in one chat.")
+                .locality(GROUP)
+                .privacy(ADMIN)
                 .action(ctx -> {
-                            SendMessage sendMessagerequest = new SendMessage();
-                            sendMessagerequest.setChatId(ctx.chatId().toString());
-                            Game game = getGame(Long.parseLong(ctx.firstArg()));
-                            silent.execute(sendMessagerequest);
-                            Player player = new Player(ctx.chatId(),ctx.user().getUserName(), game);
-                            player.say("Du möchtest dem Spiel " + game.getName() + " beitreten.");
-                            game.addPlayer(player);
-                            sendMessagerequest.setText(frage);
-                            sendMessagerequest.setReplyMarkup(new ForceReplyKeyboard());
-                            silent.execute(sendMessagerequest);
+                            Game game = getGame(ctx.chatId());
+                            String oldName = null;
+                            if (game != null) {
+                                game.sendMarkdown("Spiel wurde zurückgesetzt.");
+                                removeGame(game);
+                                oldName = game.getName();
+                            }
+                            setNewGame(ctx,oldName);
+                            inviteRoutine(ctx);
                         }
                 )
-                .reply(upd -> {
-                            long chatId = upd.getMessage().getChatId();
-                            String name = upd.getMessage().getText();
-                            Player player = getPlayer(chatId);
-                            player.setName(name);
-                            player.getGame().sendMarkdown("*"+player.getName()+"* ist dem Spiel beigetreten.");
-                        },
-                        MESSAGE,
-                        REPLY,
-                        isReplyToBot(),
-                        isReplyToMessage(frage))
                 .build();
-
-
     }
 
-    public Ability invite() {
+    public Ability lobby() {
         return Ability
                 .builder()
-                .name("invite")
-                .info("Invites Players to a Game.")
+                .name("lobby")
+                .info("(re-)opens Lobby.")
                 .locality(GROUP)
-                .privacy(PUBLIC)
+                .privacy(ADMIN)
                 .action(ctx -> {
-                            if (getGame(ctx.chatId()) == null) {
-                                Game game = new Game(ctx.chatId(), EmojiSet.CORONA, this);
-                                game.setSilent(silent);
-                                games.add(game);
-                                if (ctx.arguments().length == 0) {
-                                    game.setName("Tempel des Schreckens");
-                                } else if (ctx.arguments().length == 1) {
-                                    game.setName(ctx.firstArg());
-                                } else {
-                                    game.setName(ctx.firstArg());
-                                    Player dummy = new Player(12345, "Dummy", game);
-                                    dummy.setName(ctx.secondArg());
-                                }
-                            }
+                    Game game = getGame(ctx.chatId());
+                    String oldName = null;
+                    if (game == null) {
+                        setNewGame(ctx,null);
+                    }
+                    game=getGame(ctx.chatId());
+                    game.interrupt();
+                    inviteRoutine(ctx);
+                }
+                )
+                .build();
+    }
 
-                            Game game = getGame(ctx.chatId());
-                            MyMessage sendMessagerequest = new MyMessage(ctx.chatId(),silent);
-                            updateLobby(sendMessagerequest,game);
+    public Ability texture() {
+        return Ability
+                .builder()
+                .name("texture")
+                .info("Lets you choose a Texturepack for the bot.")
+                .locality(ALL)
+                .privacy(ADMIN)
+                .action(ctx -> {
+                    List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
+                    for (EmojiSet set: EmojiSet.values() ) {
+                        List<InlineKeyboardButton> rowInline = new ArrayList<>();
+                        rowInline.add(new InlineKeyboardButton()
+                                .setText(set.toString() + ": " + set.adventurer() + set.guard()
+                                        + set.gold() + set.fire() + set.empty()+set.closed()+set.key())
+                                .setCallbackData("texture:"+set.toString()));
+                        rowsInline.add(rowInline);
+                    }
+                    MyMessage message = new MyMessage(ctx.chatId(),silent);
+                    message.setText("Wähle bitte ein Aussehen:");
+                    ReplyKeyboard replyKeyboard = new InlineKeyboardMarkup();
+                    InlineKeyboardMarkup inlineKeyboardMarkup = ((InlineKeyboardMarkup) replyKeyboard);
+                    inlineKeyboardMarkup.setKeyboard(rowsInline);
+                    message.setReplyMarkup(inlineKeyboardMarkup);
+                    message.send();
                         }
                 ).build();
     }
+
+    public Ability sayHelloWorld() {
+        return Ability
+                .builder()
+                .name("hello")
+                .info("says hello world! ")
+                .locality(ALL)
+                .privacy(ADMIN)
+                .action(ctx -> {
+                    SendMessage sendMessagerequest = new SendMessage();
+                    sendMessagerequest.setChatId(ctx.chatId());
+                    sendMessagerequest.enableMarkdown(true);
+                    //sendMessagerequest.setReplyMarkup(new ForceReplyKeyboard());
+                    String arg = "";
+                    if(ctx.arguments().length>0){
+                        arg = ctx.firstArg();
+                    }
+                    sendMessagerequest.setText("*Hello* _world_ ! "+arg);
+                    System.out.println("I greeted "+ctx.user().getId()+" in chat "+ctx.chatId()+"!");
+                    silent.execute(sendMessagerequest);
+                })
+                .build();
+    }
+    
+    public Reply replyToSticker() {
+        Consumer<Update> action = upd -> {
+            if (upd.getMessage().isUserMessage()) {
+                System.out.println("Received Sticker: " + upd.getMessage().getSticker().getFileId());
+                silent.send(upd.getMessage().getSticker().getFileId(),upd.getMessage().getChatId());
+            }
+        };
+        return Reply.of(action, update -> update.getMessage().hasSticker());
+    }
+
+    public Reply replyToAnimation() {
+        Consumer<Update> action = upd -> {
+                String fileId = upd.getMessage().getAnimation().getFileId();
+                System.out.println("Received Animation: " + fileId);
+                silent.send("Received Animation: " + fileId,upd.getMessage().getChatId());
+                getGame(upd.getMessage().getChatId()).sendSticker(fileId);
+        };
+        return Reply.of(action, update -> update.getMessage().hasAnimation());
+    }
+
+    public Ability translateUni() {
+        return Ability
+                .builder()
+                .name("uni")
+                .info("translates Unicode to emoji!")
+                .locality(Locality.USER)
+                .privacy(PUBLIC)
+                .action(ctx -> {
+                    SendMessage sendMessagerequest = new SendMessage();
+                    sendMessagerequest.setChatId(ctx.chatId());
+                    sendMessagerequest.enableMarkdown(true);
+
+                    String str = ctx.firstArg().split(" ")[0];
+                    str = str.replace("\\","");
+                    String[] arr = str.split("u");
+                    String text = "";
+                    for(int i = 1; i < arr.length; i++){
+                        int hexVal = Integer.parseInt(arr[i], 16);
+                        text += (char)hexVal;
+                    }
+
+                    sendMessagerequest.setText("Translated: "+text);
+                    silent.execute(sendMessagerequest);
+                })
+                .build();
+    }
+
 
 
     private Game getGame(long id) {
@@ -370,13 +481,6 @@ public class PlayNowBot extends AbilityBot {
         return Math.toIntExact(adminChatId);
     }
 
-    private Predicate<Update> isReplyToMessage(String message) {
-        return upd -> {
-            Message reply = upd.getMessage().getReplyToMessage();
-            return reply.hasText() && reply.getText().equalsIgnoreCase(message);
-        };
-    }
-
     private Predicate<Update> isReplyToBot() {
         return upd -> upd.getMessage().getReplyToMessage().getFrom().getUserName().equalsIgnoreCase(getBotUsername());
     }
@@ -385,11 +489,36 @@ public class PlayNowBot extends AbilityBot {
         games.remove(toRemove);
     }
 
-    private void updateLobby(MyMessage lobby, Game game){
-        lobby.setText("Starte Tempel des Schreckens ["+game.texture+"-Edition].\r\n"+
+    public void updateLobby(MyMessage lobby, Game game){
+        lobby.setText("Tempel des Schreckens ["+game.texture+"-Edition].\r\n"+
                 "Lobby "+game.getName()+":\r\n");
         lobby.append(game.printPlayers());
-        lobby.setReplyMarkup(game.getJoinKeyboard());
+        lobby.setReplyMarkup(getJoinKeyboard(game.numPlayers()));
+        lobby.send();
+    }
+
+    public InlineKeyboardMarkup getJoinKeyboard(int numPlayers) {
+        List<InlineKeyboardButton> rowInline1 = new ArrayList<>();
+        rowInline1.add(new InlineKeyboardButton().setText("Beitreten/Verlassen").setCallbackData("joinrequest"));
+        rowInline1.add(new InlineKeyboardButton().setText("Lobby schließen").setCallbackData("cancel"));
+        List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
+        rowsInline.add(rowInline1);
+        if(numPlayers>2 && numPlayers <11){
+            List<InlineKeyboardButton> rowInline2 = new ArrayList<>();
+            rowInline2.add(new InlineKeyboardButton().setText("Spiel starten!").setCallbackData("startgame"));
+            rowsInline.add(rowInline2);
+        }
+        
+        ReplyKeyboard replyKeyboard = new InlineKeyboardMarkup();
+        InlineKeyboardMarkup inlineKeyboardMarkup = ((InlineKeyboardMarkup) replyKeyboard);
+        inlineKeyboardMarkup.setKeyboard(rowsInline);
+        return inlineKeyboardMarkup;
+    }
+
+    private void closeLobbyOnStart(MyMessage lobby, Game game){
+        lobby.setText("Tempel des Schreckens ["+game.texture+"-Edition] gestartet.\r\n"+
+                "Es spielen mit:\r\n");
+        lobby.append(game.printPlayers());
         lobby.send();
     }
 }

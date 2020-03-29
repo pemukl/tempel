@@ -21,7 +21,6 @@ public class SetOfCards {
         Random rand = new Random();
         SetOfCards hidCards = getHidden();
         Card toreturn = hidCards.open(rand.nextInt(hidCards.size()));
-        System.out.println("Hidden Cards:" + hidCards + " and open: " + toreturn);
 
         return toreturn;
     }

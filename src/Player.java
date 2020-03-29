@@ -1,16 +1,17 @@
-import org.telegram.abilitybots.api.sender.SilentSender;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendSticker;
-import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
-import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.*;
 
 public class Player {
-    private String name;
+    private static Map<String,String> names;
+
     private final long id;
 
     private Role role;
@@ -19,20 +20,18 @@ public class Player {
     private String userName;
     public boolean knowsHisCards;
 
-    private int welcomeMessageId;
-
     private Game currentGame;
 
     public Player(long id, String userName, Game game) {
+        initializeNames();
         this.currentGame = game;
         this.id = id;
         this.userName = userName;
-        if(userName==null)
-            //this.userName="Unnamed";
         this.cards = new SetOfCards();
         this.hasKey = false;
-        this.welcomeMessageId = welcomeMessageId;
     }
+
+
 
     public void setCards(SetOfCards cards) {
         this.cards = cards;
@@ -47,8 +46,45 @@ public class Player {
     }
 
     public void setName(String name) {
-        EditMessageText toEdit = new EditMessageText();
-        this.name = name;
+        addName(name,id);
+    }
+
+    public static void addName(String name, long playerId) {
+        initializeNames();
+        names.put(String.valueOf(playerId),name);
+        Properties properties = new Properties();
+
+        for (Map.Entry<String,String> entry : names.entrySet()) {
+            properties.put(entry.getKey(), entry.getValue());
+        }
+
+        try {
+            properties.store(new FileOutputStream("names.properties"), null);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void initializeNames() {
+        if (names==null){
+            names = new HashMap<String, String>();
+            Properties properties = new Properties();
+            File file = new File("names.properties");
+
+            try {
+                properties.load(new FileInputStream(file));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            for (String key : properties.stringPropertyNames()) {
+                names.put(key, properties.get(key).toString());
+            }
+        }
+    }
+
+    public static String getName(long playerId){
+        return names.get(String.valueOf(playerId));
     }
 
     public SetOfCards getCards() {
@@ -64,10 +100,15 @@ public class Player {
     }
 
     public String getName() {
+        String name = getName(id);
         if (name == null) {
-            return userName;
+            name= userName;
         }
-        return this.name;
+        return name;
+    }
+
+    public String getUserName(){
+        return userName;
     }
 
     public long getId() {
@@ -99,14 +140,7 @@ public class Player {
     }
 
     public void sendSticker(String stickerId) {
-        SendSticker sendSticker = new SendSticker();
-        sendSticker.setChatId(getId());
-        sendSticker.setSticker(stickerId);
-        try {
-            currentGame.playNowBot.execute(sendSticker);
-        } catch (Exception e) {
-            System.out.println("Caught Sticker exeption on user "+getName()+": "+e.getMessage());
-        }
+       currentGame.sendSticker(stickerId,this.getId());
     }
 
 

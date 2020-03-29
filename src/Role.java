@@ -1,6 +1,3 @@
-import org.telegram.telegrambots.meta.api.methods.send.SendSticker;
-import org.telegram.telegrambots.meta.api.objects.stickers.Sticker;
-
 public enum Role {
     ABENTEURER,
     WAECHTERIN;
