@@ -38,12 +38,12 @@ public class SetOfCards {
     }
     
     public SetOfCards getHidden(){
-        ArrayList cards = new ArrayList();
+        ArrayList hiddenCards = new ArrayList();
         for (Card cardi:this.cards) {
             if (!cardi.isExposed())
-                cards.add(cardi);
+                hiddenCards.add(cardi);
         }
-        return new SetOfCards(cards);
+        return new SetOfCards(hiddenCards);
     }
     
     public Card removeRandom(){

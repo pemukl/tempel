@@ -22,6 +22,7 @@ public class Game {
     private List<Player> players;
     public EmojiSet texture;
     private Distribution distribution;
+    public int numberofBots;
 
 
 
@@ -85,19 +86,15 @@ public class Game {
             silent.send("Es sind leider zu viele Spieler registriert. Bitte erstellt mehrere Spiele.", id);
             return;
         }
-        System.out.println("Starting Game "+this.getName()+" with "+players.size()+" Players.\r\n");
+        System.out.println("Starting Game: "+players.toString()+"\r\n");
         running = true;
         this.round = 5;
         this.exposedCards = new SetOfCards();
         this.movesLeft = players.size();
-        for (Player player:players) {
-            player.setHasKey(false);
-        }
 
 
         if (this.activePlayer==null)
             this.activePlayer = players.get(0);
-        this.activePlayer.setHasKey(true);
         distribution = Distribution.getDistribution(players.size());
         List<Role> roles = new ArrayList<>();
         for (int x = 0; x < distribution.getAbenteurer(); x++) {
@@ -129,15 +126,13 @@ public class Game {
             exposedCards.add(card);
         }
 
-        activePlayer.setHasKey(false);
         activePlayer = nextPlayer;
-        activePlayer.setHasKey(true);
 
 
 
+        printStatsWithKeyboard(message);
 
         if (movesLeft == 0||isFinished()) {
-            printStatsWithKeyboard(message);
             try {
                 Thread.sleep(2000);
             } catch (InterruptedException e) {
@@ -148,16 +143,14 @@ public class Game {
                 addStats(mb);
                 mb.send();
                 finished();
-                return;
             }else{
                 round--;
                 this.movesLeft = players.size();
                 distributeCards();
+                printStatsWithKeyboard(message);
             }
-
         }
 
-        printStatsWithKeyboard(message);
     }
 
     private boolean isFinished() {
@@ -213,7 +206,7 @@ public class Game {
 
 
     private void distributeCards() {
-        int goldLeft = distribution.getLeer() - exposedCards.countGold();
+        int goldLeft = distribution.getGold() - exposedCards.countGold();
         int feuerfallenLeft = distribution.getFeuerfallen() - exposedCards.countFire();
         int leerLeft = distribution.getLeer() - exposedCards.countEmpty();
         SetOfCards cards = new SetOfCards();
@@ -324,11 +317,9 @@ public class Game {
         try {
             playNowBot.execute(sticker);
         } catch (TelegramApiException e) {
-            e.printStackTrace();
             try {
                 playNowBot.execute(animation);
             } catch (TelegramApiException er) {
-                er.printStackTrace();
             }
         }
 

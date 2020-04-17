@@ -103,33 +103,39 @@ public class PlayNowBot extends AbilityBot {
                             message.setText("Aussehen geändert zu " + game.texture.toString());
                         }
                 }
-                System.out.println("Aussehen geändert zu "+this.selectedTexture.toString());
-
                 message.send();
+                return;
             }
 
             if(game.isRunning()) {
                 if (isLobbyQuery(query)) {
                     sendAlarm("There is a game running already.",query,false);
+                    System.out.println("received lobby query during running game");
                 } else {
                     replyToGameQuery(query);
                 }
             }else{
-                replyToLobbyQuery(query);
+                if (isLobbyQuery(query)) {
+                    replyToLobbyQuery(query);
+                } else {
+                    sendAlarm("There is no game running at the moment.",query,false);
+                    System.out.println("received game query with no game running: "+query.getData());
+                }
             }
         };
         return Reply.of(action, Flag.CALLBACK_QUERY);
     }
 
     private void replyToGameQuery(CallbackQuery query){
-        long pusher = query.getFrom().getId();
-        Player player = getPlayer(pusher);
         long chatId = query.getMessage().getChatId();
         Game game = getGame(chatId);
+        long pusher = query.getFrom().getId();
+        Player player = game.findPlayer(pusher);
+
         String[] data = query.getData().split(";");
         long chosenId = Long.parseLong(data[0]);
         int cardIndex = Integer.parseInt(data[1]);
-        Player chosenOne = getPlayer(chosenId);
+        Player chosenOne = game.findPlayer(chosenId);
 
         String reply = null;
         boolean alert =false;
@@ -146,20 +152,42 @@ public class PlayNowBot extends AbilityBot {
             alert = false;
             reply = "Diese Karte wurde schon geöffnet.";
         }
-        if (game.getActivePlayer().getId() != player.getId()) {
-            alert = false;
-            reply = "Du bist nicht am Zug.";
-        }
-        if(chosenOne==player){
+
+        if(chosenOne instanceof  DummyPlayer){
             if (cardIndex==-1) {
-                alert = true;
-                reply = "Deine Rolle:" + player.getRole().getEmoji(game);
+                if(game.getActivePlayer() instanceof DummyPlayer || (game.getActivePlayer()==player)){
+
+                } else {
+                    alert = true;
+                    reply = "Die Rolle vom Bot: " + chosenOne.getRole().getEmoji(game);
+                }
             } else {
                 alert = true;
-                reply = "Deine Karten:\r\n" + player.getCards().getHidden().printSort();
-                player.knowsHisCards = true;
+                reply = "Die Karten von "+chosenOne.getName()+":\r\n"+chosenOne.getCards().getHidden().print();
+                chosenOne.knowsHisCards=true;
                 game.printStatsWithKeyboard(query.getMessage());
             }
+        } else {
+            if (chosenOne==player && cardIndex==-1) {
+                if(game.getActivePlayer() instanceof DummyPlayer){
+
+                } else {
+                    alert = true;
+                    reply = "Deine Rolle:" + player.getRole().getEmoji(game);
+                }
+            } else if (game.getActivePlayer().getId() != player.getId()) {
+                alert = false;
+                reply = "Du bist nicht am Zug.";
+            }
+        }
+
+        if(chosenOne==player && cardIndex!=-1){
+            alert = true;
+            reply = "Deine Karten:\r\n" + player.getCards().getHidden().printSort();
+            //System.out.println("told "+player.getName()+" his cards: "
+            //        + player.getCards().print() + " and hidden sorted: " + player.getCards().getHidden().printSort());
+            player.knowsHisCards = true;
+            game.printStatsWithKeyboard(query.getMessage());
         }
 
 
@@ -189,8 +217,13 @@ public class PlayNowBot extends AbilityBot {
             updateLobby(lobby,game);
 
         } else if(query.getData().equalsIgnoreCase("startgame")){
-            closeLobbyOnStart(lobby,game);
-            game.play();
+            if (game.findPlayer(query.getFrom().getId()) != null){
+                closeLobbyOnStart(lobby,game);
+                game.play();
+            }else{
+                sendAlarm("Du kannst das Spiel nur starten, wenn Du selbst in der lobby bist.",query,true);
+
+            }
         } else if(query.getData().equalsIgnoreCase("cancel")) {
             if(game.findPlayer(query.getFrom().getId())!= null) {
                 removeGame(game);
@@ -206,7 +239,8 @@ public class PlayNowBot extends AbilityBot {
     }
 
     private boolean isLobbyQuery(CallbackQuery query){
-        return query.getData().equalsIgnoreCase("joinrequest") || query.getData().equalsIgnoreCase("startgame");
+        String parameter = query.getData();
+        return parameter.equalsIgnoreCase("joinrequest") || parameter.equalsIgnoreCase("startgame") || parameter.equalsIgnoreCase("cancel");
     }
 
     private void sendAlarm(String message, CallbackQuery query, boolean alert){
@@ -217,7 +251,11 @@ public class PlayNowBot extends AbilityBot {
         try {
             this.execute(reply);
         } catch (TelegramApiException e) {
-            System.err.println(e.getMessage());
+            if (e.toString().contains("[400]")) {
+                //silent.send("Sorry, I had a timeout and had to discard your Buttonpush.", query.getMessage().getChatId());
+                System.out.println(e.toString());
+            }else
+                System.err.println(e.toString());
         }
     }
 
@@ -307,9 +345,26 @@ public class PlayNowBot extends AbilityBot {
                 .name("startgame")
                 .info("(re-)starts a Game.")
                 .locality(GROUP)
-                .privacy(ADMIN)
+                .privacy(GROUP_ADMIN)
                 .action(ctx -> {
                             Objects.requireNonNull(getGame(ctx.chatId())).play();
+                        }
+                )
+                .build();
+    }
+
+    public Ability addBot() {
+        return Ability
+                .builder()
+                .name("addbot")
+                .info("Adds a Bot to the Game.")
+                .locality(GROUP)
+                .privacy(GROUP_ADMIN)
+                .action(ctx -> {
+                    Game game = getGame(ctx.chatId());
+                    Player bot = new DummyPlayer(game);
+                    game.addPlayer(bot);
+                    game.sendMarkdown("Added Bot: "+ bot.getName());
                         }
                 )
                 .build();
@@ -321,7 +376,7 @@ public class PlayNowBot extends AbilityBot {
                 .name("reset")
                 .info("Resets the Bot in one chat.")
                 .locality(GROUP)
-                .privacy(ADMIN)
+                .privacy(GROUP_ADMIN)
                 .action(ctx -> {
                             Game game = getGame(ctx.chatId());
                             String oldName = null;
@@ -343,7 +398,7 @@ public class PlayNowBot extends AbilityBot {
                 .name("lobby")
                 .info("(re-)opens Lobby.")
                 .locality(GROUP)
-                .privacy(ADMIN)
+                .privacy(GROUP_ADMIN)
                 .action(ctx -> {
                     Game game = getGame(ctx.chatId());
                     String oldName = null;
@@ -364,7 +419,7 @@ public class PlayNowBot extends AbilityBot {
                 .name("texture")
                 .info("Lets you choose a Texturepack for the bot.")
                 .locality(ALL)
-                .privacy(ADMIN)
+                .privacy(GROUP_ADMIN)
                 .action(ctx -> {
                     List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
                     for (EmojiSet set: EmojiSet.values() ) {
@@ -462,15 +517,6 @@ public class PlayNowBot extends AbilityBot {
         for (Game game : games) {
             if (game.getId() == id)
                 return game;
-        }
-        return null;
-    }
-
-    private Player getPlayer(long id) {
-        for (Game game : games) {
-            Player player = game.findPlayer(id);
-            if (player != null)
-                return player;
         }
         return null;
     }

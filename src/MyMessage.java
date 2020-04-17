@@ -62,7 +62,22 @@ public class MyMessage {
             try {
                 bot.execute(message);
             } catch (TelegramApiException e) {
-                System.out.println("Error sending: " + e.getMessage());
+                if(e.toString().contains("[400]"))
+                    return;
+
+                if(e.toString().contains("[429]")) {
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException ex) {
+                        ex.printStackTrace();
+                    }
+                    this.send();
+                    return;
+                }
+
+                System.out.println("Error sending: \""+ message.getText() + "\" \r\n"
+                        + e.toString());
+
             }
         }
     }

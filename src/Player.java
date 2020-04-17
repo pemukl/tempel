@@ -16,11 +16,10 @@ public class Player {
 
     private Role role;
     private SetOfCards cards;
-    private boolean hasKey;
     private String userName;
     public boolean knowsHisCards;
 
-    private Game currentGame;
+    protected Game currentGame;
 
     public Player(long id, String userName, Game game) {
         initializeNames();
@@ -28,17 +27,12 @@ public class Player {
         this.id = id;
         this.userName = userName;
         this.cards = new SetOfCards();
-        this.hasKey = false;
     }
 
 
 
     public void setCards(SetOfCards cards) {
         this.cards = cards;
-    }
-
-    public void setHasKey(boolean hasKey) {
-        this.hasKey = hasKey;
     }
 
     public void setRole(Role role) {
@@ -95,9 +89,6 @@ public class Player {
         return role;
     }
 
-    public boolean isHasKey() {
-        return hasKey;
-    }
 
     public String getName() {
         String name = getName(id);
@@ -105,6 +96,10 @@ public class Player {
             name= userName;
         }
         return name;
+    }
+
+    public String toString(){
+        return getName();
     }
 
     public String getUserName(){
@@ -140,7 +135,7 @@ public class Player {
     }
 
     public void sendSticker(String stickerId) {
-       currentGame.sendSticker(stickerId,this.getId());
+      // currentGame.sendSticker(stickerId,this.getId());
     }
 
 
@@ -156,7 +151,7 @@ public class Player {
         for (Player player : players) {
             List<InlineKeyboardButton> rowInline1 = new ArrayList<>();
             String key = "";
-            if (player.hasKey)
+            if (currentGame.getActivePlayer() == player)
                 key = currentGame.texture.key();
             rowInline1.add(new InlineKeyboardButton().setText(key + player.getName() + key).setCallbackData(player.getId()+";-1"));
 
@@ -168,7 +163,7 @@ public class Player {
                     rowInline2.add(new InlineKeyboardButton().setText(str).setCallbackData(player.getId() + ";" + i));
                 }
             } else {
-                if(player.hasKey)
+                if(currentGame.getActivePlayer() ==player)
                     for (int i = 0; i < hiddencards.length; i++) {
                         rowInline2.add(new InlineKeyboardButton().setText("\ud83d\udd0d").setCallbackData(player.getId() + ";" + i));
                     }
