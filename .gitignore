@@ -29,3 +29,5 @@ config.dat
 *.iml
 
 PlayNowBot
+
+names.properties
