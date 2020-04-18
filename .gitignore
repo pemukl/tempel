@@ -31,3 +31,5 @@ config.dat
 PlayNowBot
 
 names.properties
+
+target/
