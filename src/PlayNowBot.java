@@ -89,6 +89,13 @@ public class PlayNowBot extends AbilityBot {
             CallbackQuery query = upd.getCallbackQuery();
             Game game = getGame(query.getMessage().getChatId());
             String[] data = query.getData().split(":");
+            if(game.findPlayer(upd.getMessage().getFrom().getId()) == null){
+                MyMessage message = new MyMessage(upd.getCallbackQuery().getMessage(), this);
+                message.setText("Du kannst leider nur zusehen, weil Du nicht mitspielst.");
+                message.send();
+                return;
+            }
+
             if(data[0].equalsIgnoreCase("texture")){
                 MyMessage message = new MyMessage(upd.getCallbackQuery().getMessage(), this);
                 for (EmojiSet set:EmojiSet.values()) {
