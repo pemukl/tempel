@@ -1,6 +1,9 @@
 # TempelDesSchreckens
-Tempel des Schreckens fürs HHG
 
-Dies ist das Spiel "Tempel des Schreckens". Es wurde extra fürs HHG in der Corona Zeit implementiert. Es kann über Telegram gespielt werden. Zudem sollte man in einem Sprachchat miteinader telefonieren oder sogar in einem Videochat sich gegenseitig beobachten, ob man lügt.
+Dies ist der Code eines Telegrambots, mit dem man "Tempel des Schreckens" spielen kann.
+Es wurde als Unterhaltung in zu Zeiten von Corona implementiert.
+Man sollte beim Spielen in einem Sprachchat miteinader telefonieren, um beurteilen zu können, ob man lügt.
 
-Viel Spaß liebe HHGler und noch eine schöne Zeit in der Quarantäne. :)
+Vorraussetzung zur Installation sind ein Telegrambot, den man bei @BotFather erstellen kann. Dieser gibt einem einem BotToken und einen BotNamen, den man nach dem ersten Ausführen in die Datei "config.dat" eintragen muss.
+
+Viel Spaß beim Spielen!
