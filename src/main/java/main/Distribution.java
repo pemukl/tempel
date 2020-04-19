@@ -1,3 +1,5 @@
+package main;
+
 public enum Distribution {
 
     Spieler2(1, 1, 3, 3, 4),

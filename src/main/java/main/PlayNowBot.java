@@ -1,4 +1,5 @@
-import org.omg.CORBA.Any;
+package main;
+
 import org.telegram.abilitybots.api.bot.AbilityBot;
 import org.telegram.abilitybots.api.objects.*;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
@@ -28,7 +29,7 @@ public class PlayNowBot extends AbilityBot {
     private long adminChatId;
 
     private static final String BOT_TOKEN = "1023104342:AAHxVpFvoGnEEzNPf41L_QFJD2cPtTIZB94";
-    private static final String BOT_USERNAME = "PlayNowBot";
+    private static final String BOT_USERNAME = "application.PlayNowBot";
 
     private List<Game> games = new ArrayList<>();
     private EmojiSet selectedTexture = EmojiSet.CORONA;
@@ -39,7 +40,7 @@ public class PlayNowBot extends AbilityBot {
         super(BOT_TOKEN, BOT_USERNAME);
     }
 
-    PlayNowBot(String botToken, String botName, long adminChatId) {
+    public PlayNowBot(String botToken, String botName, long adminChatId) {
         super(botToken, botName);
         this.adminChatId = adminChatId;
     }
@@ -48,7 +49,7 @@ public class PlayNowBot extends AbilityBot {
         return Ability
                 .builder()
                 .name("invite")
-                .info("Invites Players to a Game.")
+                .info("Invites Players to a application.Game.")
                 .locality(GROUP)
                 .privacy(PUBLIC)
                 .action(ctx -> {
@@ -350,7 +351,7 @@ public class PlayNowBot extends AbilityBot {
         return Ability
                 .builder()
                 .name("startgame")
-                .info("(re-)starts a Game.")
+                .info("(re-)starts a application.Game.")
                 .locality(GROUP)
                 .privacy(GROUP_ADMIN)
                 .action(ctx -> {
@@ -364,7 +365,7 @@ public class PlayNowBot extends AbilityBot {
         return Ability
                 .builder()
                 .name("addbot")
-                .info("Adds a Bot to the Game.")
+                .info("Adds a Bot to the application.Game.")
                 .locality(GROUP)
                 .privacy(GROUP_ADMIN)
                 .action(ctx -> {

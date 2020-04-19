@@ -1,3 +1,5 @@
+package main;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -137,7 +139,7 @@ public class SetOfCards {
 
     @Override
     public String toString() {
-        return "SetOfCards{" +
+        return "application.SetOfCards{" +
                 "cards=" + cards +
                 '}';
     }

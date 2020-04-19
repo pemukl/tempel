@@ -1,3 +1,5 @@
+package main;
+
 import org.telegram.abilitybots.api.sender.SilentSender;
 import org.telegram.telegrambots.meta.api.methods.send.SendAnimation;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -86,7 +88,7 @@ public class Game {
             silent.send("Es sind leider zu viele Spieler registriert. Bitte erstellt mehrere Spiele.", id);
             return;
         }
-        System.out.println("Starting Game: "+players.toString()+"\r\n");
+        System.out.println("Starting application.Game: "+players.toString()+"\r\n");
         running = true;
         this.round = 5;
         this.exposedCards = new SetOfCards();

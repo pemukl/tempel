@@ -1,3 +1,5 @@
+package main;
+
 public enum EmojiSet{
     //WORDS("*Feuerfalle*", "*Gold*", "*Leer*", "-", "*Wächterin*","*Abenteurer*", "*(X)*",
     //        "StickerAdventurer",

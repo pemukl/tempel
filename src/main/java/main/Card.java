@@ -1,3 +1,5 @@
+package main;
+
 public class Card {
     public enum Content {
         LEER,
