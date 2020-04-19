@@ -191,7 +191,7 @@ public class Game {
             string.append(winner.getRole().getEmoji(this) +" "+ winner.getName()+"\r\n");
         }
         string.append("\r\n");
-        string.append("----------\uD83D\uDC4E----------\r\n\r\n");
+        string.append("----------\uD83D\uDCA9----------\r\n\r\n");
         for (Player loser :losers ) {
             string.append(loser.getRole().getEmoji(this) + " " +loser.getName()+"\r\n");
         }
