@@ -69,6 +69,7 @@ public class Main {
         try {
             LongPollingBot playNowBot = new PlayNowBot(telegramBotToken, telegramBotName, telegramAdminChatID);
             botsApi.registerBot(playNowBot);
+            MyMessage.setBot((PlayNowBot) playNowBot);
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }

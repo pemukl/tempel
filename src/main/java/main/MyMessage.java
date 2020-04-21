@@ -11,9 +11,13 @@ public class MyMessage {
     private String text;
     private long chatId;
     private int messageId;
-    private PlayNowBot bot;
+    private static PlayNowBot bot;
     private SilentSender silent;
     private InlineKeyboardMarkup keyboard;
+
+    public static void setBot(PlayNowBot botP){
+        bot = botP;
+    }
 
     public MyMessage(long chatId, SilentSender silent){
         this.silent = silent;
@@ -21,10 +25,15 @@ public class MyMessage {
         this.text = "";
     }
 
-    public MyMessage(Message message, PlayNowBot bot){
+    public MyMessage(Message message){
         this.messageId = message.getMessageId();
-        this.bot = bot;
         this.chatId = message.getChatId();
+        this.text = "";
+    }
+
+    public MyMessage(){
+        this.messageId = -1;
+        this.chatId = bot.creatorId();
         this.text = "";
     }
 
@@ -46,7 +55,7 @@ public class MyMessage {
     }
 
     public void send() {
-        if (silent!=null){
+        if (silent!=null || chatId == bot.creatorId()){
             SendMessage message = new SendMessage();
             message.enableMarkdown(true);
             message.setChatId(chatId);
@@ -54,7 +63,7 @@ public class MyMessage {
             message.setReplyMarkup(keyboard);
             silent.execute(message);
         }
-        if (bot!=null){
+        if (chatId!=-1){
             EditMessageText message = new EditMessageText();
             message.enableMarkdown(true);
             message.setChatId(chatId);

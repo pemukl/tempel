@@ -96,7 +96,7 @@ public class PlayNowBot extends AbilityBot {
             }
 
             if(data[0].equalsIgnoreCase("texture")){
-                MyMessage message = new MyMessage(upd.getCallbackQuery().getMessage(), this);
+                MyMessage message = new MyMessage(upd.getCallbackQuery().getMessage());
                 for (EmojiSet set:EmojiSet.values()) {
                     if(set.toString().equalsIgnoreCase(data[1]))
                         if (upd.getCallbackQuery().getMessage().isUserMessage()) {
@@ -115,7 +115,7 @@ public class PlayNowBot extends AbilityBot {
 
             if(game.isRunning()) {
                 if (isLobbyQuery(query)) {
-                    sendAlarm("There is a game running already.",query,false);
+                    sendAlarm("Es läuft bereits ein Spiel.",query,false);
                     System.out.println("received lobby query during running game");
                 } else {
                     replyToGameQuery(query);
@@ -124,7 +124,7 @@ public class PlayNowBot extends AbilityBot {
                 if (isLobbyQuery(query)) {
                     replyToLobbyQuery(query);
                 } else {
-                    sendAlarm("There is no game running at the moment.",query,false);
+                    sendAlarm("Momentan läuft kein Spiel.",query,false);
                     System.out.println("received game query with no game running: "+query.getData());
                 }
             }
@@ -207,7 +207,7 @@ public class PlayNowBot extends AbilityBot {
     private void replyToLobbyQuery(CallbackQuery query) {
         long chatId = query.getMessage().getChatId();
         Game game = getGame(chatId);
-        MyMessage lobby = new MyMessage(query.getMessage(),this);
+        MyMessage lobby = new MyMessage(query.getMessage());
         if (query.getData().equalsIgnoreCase("joinrequest")){
             User user = query.getFrom();
             if(game.findPlayer(user.getId()) == null){
@@ -215,7 +215,7 @@ public class PlayNowBot extends AbilityBot {
                 if (tojoin.getName()!=null) {
                     game.addPlayer(tojoin);
                 } else {
-                    sendAlarm("Du kannst leider nur Beitreten, indem Du mit Deinem Wunschnamen auf die Lobby antwortest.",query,true);
+                    sendAlarm("Du kannst nur Beitreten, indem Du mit Deinem Wunschnamen auf die Lobby antwortest.",query,true);
                 }
             } else {
                 game.removeplayer(user.getId());
@@ -233,11 +233,11 @@ public class PlayNowBot extends AbilityBot {
         } else if(query.getData().equalsIgnoreCase("cancel")) {
             if(game.findPlayer(query.getFrom().getId())!= null) {
                 removeGame(game);
-                MyMessage toremove = new MyMessage(query.getMessage(), this);
+                MyMessage toremove = new MyMessage(query.getMessage());
                 toremove.setText("Lobby geschlossen.");
                 toremove.send();
             } else {
-                sendAlarm("You must be in the Lobby to close it.",query,true);
+                sendAlarm("Du kannst das Spiel nur beenden, wenn Du selbst in der lobby bist.",query,true);
             }
         } else {
             System.out.println("unhandeled Joinrequest: "+query.getData());
@@ -287,7 +287,7 @@ public class PlayNowBot extends AbilityBot {
                     player.say("Du bist dem Spiel " + game.getName() + " als \""+name+"\" beitreten.");
                 }
             }
-            MyMessage lobby = new MyMessage(message.getReplyToMessage(),this);
+            MyMessage lobby = new MyMessage(message.getReplyToMessage());
             updateLobby(lobby,game);
         };
         return Reply.of(action, MESSAGE, REPLY, isReplyToBot());

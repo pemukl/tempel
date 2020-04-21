@@ -88,7 +88,10 @@ public class Game {
             silent.send("Es sind leider zu viele Spieler registriert. Bitte erstellt mehrere Spiele.", id);
             return;
         }
-        System.out.println("Starting application.Game: "+players.toString()+"\r\n");
+        System.out.println("Starting Game: "+players.toString()+"\r\n");
+        MyMessage message = new MyMessage(playNowBot.creatorId(),silent);
+        message.setText("Starting Game: "+players.toString()+"\r\n");
+        message.send();
         running = true;
         this.round = 5;
         this.exposedCards = new SetOfCards();
@@ -108,7 +111,8 @@ public class Game {
         Collections.shuffle(roles);
         for (Player player : players) {
             player.setRole(roles.remove(0));
-            player.say("Deine Rolle ist " + player.getRole().getEmoji(this) + " !");
+            if(player.getId() != playNowBot.creatorId())
+                player.say("Deine Rolle ist " + player.getRole().getEmoji(this) + " !");
             player.sendSticker(player.getRole().getStickerID(this));
         }
         distributeCards();
@@ -197,7 +201,7 @@ public class Game {
         }
         string.append("\r\n------------------------");
 
-        sendSticker(winnerParty.getStickerID(this));
+        //sendSticker(winnerParty.getStickerID(this));
         sendMarkdown(string.toString());
         running = false;
 
@@ -245,7 +249,7 @@ public class Game {
         if(message == null)
             messageBuilder = new MyMessage(id, silent);
         else
-            messageBuilder =new MyMessage(message,playNowBot);
+            messageBuilder =new MyMessage(message);
         return messageBuilder;
     }
 
