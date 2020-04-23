@@ -400,10 +400,13 @@ public class PlayNowBot extends AbilityBot {
                 .locality(GROUP)
                 .privacy(GROUP_ADMIN)
                 .action(ctx -> {
+                    log("Adding Dummy.");
                     Game game = getGame(ctx.chatId());
                     Player bot = new DummyPlayer(game);
                     game.addPlayer(bot);
+                    log("Added Bot: "+ bot.getName());
                     game.sendMarkdown("Added Bot: "+ bot.getName());
+
                         }
                 )
                 .build();

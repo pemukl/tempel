@@ -84,12 +84,14 @@ public class Player {
     }
 
     private static String escapeAsterix(String str){
-        str= str.replace("*", "°");
+        if(str!=null)
+            str= str.replace("*", "°");
         return str;
     }
 
     private static String escapeUnderscore(String str){
-        str= str.replace("_", "\\_");
+        if(str!=null)
+            str= str.replace("_", "\\_");
 
         // \ ` * _ { } [ ] ( ) # + - . ! " '
         return str;
