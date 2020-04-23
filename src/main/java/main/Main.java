@@ -10,10 +10,14 @@ import java.io.*;
 
 public class Main {
 
+
+
     public static void main(String[] args) {
         String telegramBotToken = null, telegramBotName = null;
         long telegramAdminChatID = -1;
         File file = new File("config.dat");
+        boolean logOn =false;
+        boolean tellAdmin = false;
         boolean fileCreated = true;
         try {
             fileCreated = file.createNewFile();
@@ -41,6 +45,14 @@ public class Main {
                             telegramAdminChatID = Long.parseLong(split[1]);
                         else if (split[0].equalsIgnoreCase("telegramBotName"))
                             telegramBotName = split[1];
+                        else if (split[0].equalsIgnoreCase("logMode")&&split[1].equalsIgnoreCase("ON")){
+                            logOn = true;
+                            System.out.println("Verbose logging enabeled");
+                        } else if (split[0].equalsIgnoreCase("channel")&&split[1].equalsIgnoreCase("sout")){
+                        } else if (split[0].equalsIgnoreCase("channel")&&split[1].equalsIgnoreCase("admin")){
+                            tellAdmin=true;
+                        }
+
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -53,6 +65,8 @@ public class Main {
                 fileWriter.append("telegramBotToken=").append(telegramBotToken == null ? "" : telegramBotToken).append('\n');
                 fileWriter.append("telegramAdminChatID=").append(String.valueOf(telegramAdminChatID == -1 ? "" : telegramAdminChatID)).append('\n');
                 fileWriter.append("telegramBotName=").append(telegramBotName == null ? "" : telegramBotName).append('\n');
+                fileWriter.append("logMode=Off");
+                fileWriter.append("channel=sout").append(telegramBotName == null ? "" : telegramBotName).append('\n');
                 fileWriter.close();
             } catch (IOException e) {
                 e.printStackTrace();
@@ -67,7 +81,7 @@ public class Main {
         ApiContextInitializer.init();
         TelegramBotsApi botsApi = new TelegramBotsApi();
         try {
-            LongPollingBot playNowBot = new PlayNowBot(telegramBotToken, telegramBotName, telegramAdminChatID);
+            LongPollingBot playNowBot = new PlayNowBot(telegramBotToken, telegramBotName, telegramAdminChatID,logOn,tellAdmin);
             botsApi.registerBot(playNowBot);
             MyMessage.setBot((PlayNowBot) playNowBot);
         } catch (TelegramApiException e) {

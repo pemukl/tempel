@@ -1,5 +1,6 @@
 package main;
 
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -79,7 +80,19 @@ public class Player {
     }
 
     public static String getName(long playerId){
-        return names.get(String.valueOf(playerId));
+        return escapeAsterix(names.get(String.valueOf(playerId)));
+    }
+
+    private static String escapeAsterix(String str){
+        str= str.replace("*", "°");
+        return str;
+    }
+
+    private static String escapeUnderscore(String str){
+        str= str.replace("_", "\\_");
+
+        // \ ` * _ { } [ ] ( ) # + - . ! " '
+        return str;
     }
 
     public SetOfCards getCards() {
@@ -94,7 +107,7 @@ public class Player {
     public String getName() {
         String name = getName(id);
         if (name == null) {
-            name= userName;
+            name= getUserName();
         }
         return name;
     }
@@ -104,7 +117,7 @@ public class Player {
     }
 
     public String getUserName(){
-        return userName;
+        return escapeUnderscore(userName);
     }
 
     public long getId() {

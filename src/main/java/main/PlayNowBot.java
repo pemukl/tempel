@@ -26,7 +26,7 @@ import static org.telegram.abilitybots.api.objects.Locality.*;
 import static org.telegram.abilitybots.api.objects.Privacy.*;
 
 public class PlayNowBot extends AbilityBot {
-    private long adminChatId;
+    private static long adminChatId;
 
     private static final String BOT_TOKEN = "1023104342:AAHxVpFvoGnEEzNPf41L_QFJD2cPtTIZB94";
     private static final String BOT_USERNAME = "application.PlayNowBot";
@@ -34,15 +34,42 @@ public class PlayNowBot extends AbilityBot {
     private List<Game> games = new ArrayList<>();
     private EmojiSet selectedTexture = EmojiSet.CORONA;
 
+    private static boolean logOn =false;
+    private static boolean tellAdmin = false;
+
+    public void log(String tolog){
+        if(logOn) {
+            notify(tolog);
+        }
+    }
+
+    public void notify(String toSay){
+        if(tellAdmin){
+            SendMessage message = new SendMessage();
+            message.setChatId(adminChatId);
+            message.setText(toSay);
+            try {
+                this.execute(message);
+            } catch (TelegramApiException e) {
+                e.printStackTrace();
+            }
+        } else {
+            System.out.println(toSay);
+        }
+    }
+
 
 
     public PlayNowBot() {
         super(BOT_TOKEN, BOT_USERNAME);
     }
 
-    public PlayNowBot(String botToken, String botName, long adminChatId) {
+    public PlayNowBot(String botToken, String botName, long adminChatId,boolean logOn,boolean tellAdmin) {
         super(botToken, botName);
         this.adminChatId = adminChatId;
+        this.logOn = logOn;
+        this.tellAdmin = tellAdmin;
+        notify("Bot Started.");
     }
 
     public Ability invite() {
@@ -89,6 +116,9 @@ public class PlayNowBot extends AbilityBot {
         Consumer<Update> action = upd -> {
             CallbackQuery query = upd.getCallbackQuery();
             Game game = getGame(query.getMessage().getChatId());
+            Player tempPlayer = new Player(query.getFrom().getId(),query.getFrom().getUserName(),game);
+            log("Received Query:"+query.getData()+" from "+tempPlayer.getName());
+
             String[] data = query.getData().split(":");
             if(game.isRunning() && game.findPlayer(upd.getCallbackQuery().getFrom().getId()) == null){
                 sendAlarm("Du spielst nicht mit und kannst leider nur zusehen.",upd.getCallbackQuery(),true);
@@ -213,11 +243,13 @@ public class PlayNowBot extends AbilityBot {
             if(game.findPlayer(user.getId()) == null){
                 Player tojoin = new Player(user.getId(),user.getUserName(), game);
                 if (tojoin.getName()!=null) {
+                    log("Player "+tojoin.getName()+" joined the game.");
                     game.addPlayer(tojoin);
                 } else {
                     sendAlarm("Du kannst nur Beitreten, indem Du mit Deinem Wunschnamen auf die Lobby antwortest.",query,true);
                 }
             } else {
+                log("Player "+game.findPlayer(user.getId()).getName()+" left the game.");
                 game.removeplayer(user.getId());
             }
             updateLobby(lobby,game);
@@ -272,6 +304,7 @@ public class PlayNowBot extends AbilityBot {
             String name = message.getText();
             Game game = getGame(chatId);
             User from = message.getFrom();
+            log("Player tries to join with Name: "+name);
             Player potentialPlayer = game.findPlayer(from.getId());
             if(potentialPlayer != null){
                 potentialPlayer.setName(name);

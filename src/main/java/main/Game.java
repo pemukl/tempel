@@ -88,10 +88,8 @@ public class Game {
             silent.send("Es sind leider zu viele Spieler registriert. Bitte erstellt mehrere Spiele.", id);
             return;
         }
-        System.out.println("Starting Game: "+players.toString()+"\r\n");
-        MyMessage message = new MyMessage(playNowBot.creatorId(),silent);
-        message.setText("Starting Game: "+players.toString()+"\r\n");
-        message.send();
+        playNowBot.notify("Starting Game: "+players.toString()+"\r\n");
+
         running = true;
         this.round = 5;
         this.exposedCards = new SetOfCards();
